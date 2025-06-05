@@ -1,0 +1,680 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wonderland Online Database</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        wlBlue: '#3b82f6',
+                        wlPurple: '#8b5cf6',
+                        wlGreen: '#10b981',
+                        wlRed: '#ef4444',
+                        wlYellow: '#f59e0b',
+                        wlDark: '#1e293b',
+                        wlDarker: '#0f172a',
+                        wlLight: '#f8fafc',
+                    },
+                    animation: {
+                        'float': 'float 6s ease-in-out infinite',
+                        'float-fast': 'float 4s ease-in-out infinite',
+                        'pulse-slow': 'pulse 8s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                    },
+                    keyframes: {
+                        float: {
+                            '0%, 100%': { transform: 'translateY(0)' },
+                            '50%': { transform: 'translateY(-10px)' },
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+        
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: #0f172a;
+            background-image: 
+                radial-gradient(at 20% 30%, rgba(59, 130, 246, 0.15) 0px, transparent 50%),
+                radial-gradient(at 80% 0%, rgba(139, 92, 246, 0.15) 0px, transparent 50%),
+                radial-gradient(at 0% 50%, rgba(239, 68, 68, 0.1) 0px, transparent 50%),
+                url('https://images.unsplash.com/photo-1605106702734-205df224ecce?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1470&q=80');
+            background-size: cover;
+            background-attachment: fixed;
+            background-position: center;
+            background-blend-mode: overlay;
+            min-height: 100vh;
+            color: #f8fafc;
+        }
+        
+        .card-hover {
+            transition: all 0.3s ease;
+            transform-style: preserve-3d;
+        }
+        
+        .card-hover:hover {
+            transform: translateY(-5px) scale(1.02) rotateX(1deg);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.2), 0 10px 10px -5px rgba(0, 0, 0, 0.1);
+        }
+        
+        .search-input:focus {
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.5);
+        }
+        
+        .nav-link {
+            position: relative;
+        }
+        
+        .nav-link::after {
+            content: '';
+            position: absolute;
+            width: 0;
+            height: 2px;
+            bottom: 0;
+            left: 0;
+            background-color: currentColor;
+            transition: width 0.3s ease;
+        }
+        
+        .nav-link:hover::after {
+            width: 100%;
+        }
+        
+        .glow {
+            text-shadow: 0 0 10px rgba(139, 92, 246, 0.7);
+        }
+        
+        .category-icon {
+            transition: all 0.3s ease;
+            transform-style: preserve-3d;
+        }
+        
+        .category-card:hover .category-icon {
+            transform: scale(1.2) rotateY(10deg);
+        }
+        
+        .gradient-text {
+            background-clip: text;
+            -webkit-background-clip: text;
+            color: transparent;
+        }
+        
+        .blur-bg {
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+        }
+        
+        .floating-island {
+            animation: float 6s ease-in-out infinite;
+        }
+        
+        .floating-island:nth-child(2) {
+            animation-delay: 1s;
+        }
+        
+        .floating-island:nth-child(3) {
+            animation-delay: 2s;
+        }
+        
+        .tooltip {
+            position: relative;
+        }
+        
+        .tooltip:hover .tooltip-text {
+            visibility: visible;
+            opacity: 1;
+            transform: translateY(0);
+        }
+        
+        .tooltip-text {
+            visibility: hidden;
+            opacity: 0;
+            position: absolute;
+            z-index: 10;
+            bottom: 125%;
+            left: 50%;
+            transform: translateX(-50%) translateY(10px);
+            background-color: #1e293b;
+            color: white;
+            text-align: center;
+            padding: 5px 10px;
+            border-radius: 6px;
+            transition: all 0.3s ease;
+            width: max-content;
+            max-width: 200px;
+            font-size: 0.8rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+        
+        .tooltip-text::after {
+            content: "";
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            margin-left: -5px;
+            border-width: 5px;
+            border-style: solid;
+            border-color: #1e293b transparent transparent transparent;
+        }
+        
+        .fade-in {
+            animation: fadeIn 0.5s ease-in forwards;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .sidebar {
+            transition: transform 0.3s ease;
+        }
+        
+        .sidebar-hidden {
+            transform: translateX(100%);
+        }
+        
+        .sidebar-visible {
+            transform: translateX(0);
+        }
+        
+        .dark-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 40;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+        
+        .dark-overlay-visible {
+            opacity: 1;
+            pointer-events: auto;
+        }
+    </style>
+</head>
+<body class="text-wlLight">
+    <!-- Dark overlay for mobile menu -->
+    <div id="darkOverlay" class="dark-overlay"></div>
+    
+    <!-- Mobile sidebar -->
+    <div id="mobileSidebar" class="sidebar sidebar-hidden fixed inset-y-0 right-0 w-64 bg-wlDarker z-50 shadow-2xl p-4 overflow-y-auto">
+        <div class="flex justify-between items-center mb-8">
+            <div class="w-10 h-10 rounded-full bg-gradient-to-br from-wlPurple to-wlBlue flex items-center justify-center">
+                <i class="fas fa-dragon text-xl text-white"></i>
+            </div>
+            <button id="closeSidebar" class="text-wlLight hover:text-wlRed">
+                <i class="fas fa-times text-xl"></i>
+            </button>
+        </div>
+        <nav class="space-y-4">
+            <a href="#" class="block px-4 py-2 rounded-md font-medium hover:bg-wlDark hover:bg-opacity-50 transition">Home</a>
+            <a href="#" class="block px-4 py-2 rounded-md font-medium hover:bg-wlDark hover:bg-opacity-50 transition">Items</a>
+            <a href="#" class="block px-4 py-2 rounded-md font-medium hover:bg-wlDark hover:bg-opacity-50 transition">Quests</a>
+            <a href="#" class="block px-4 py-2 rounded-md font-medium hover:bg-wlDark hover:bg-opacity-50 transition">Monsters</a>
+            <a href="#" class="block px-4 py-2 rounded-md font-medium hover:bg-wlDark hover:bg-opacity-50 transition">Guides</a>
+            <a href="#" class="block px-4 py-2 rounded-md font-medium hover:bg-wlDark hover:bg-opacity-50 transition">Tier-List</a>
+            <a href="#" class="block px-4 py-2 rounded-md font-medium hover:bg-wlDark hover:bg-opacity-50 transition">Shops</a>
+            <a href="#" class="block px-4 py-2 rounded-md font-medium hover:bg-wlDark hover:bg-opacity-50 transition">Recycles</a>
+        </nav>
+        <div class="mt-8 pt-4 border-t border-wlLight border-opacity-20">
+            <h4 class="font-medium mb-4">Quick Links</h4>
+            <div class="space-y-2">
+                <a href="#" class="block text-sm text-wlLight text-opacity-70 hover:text-wlBlue transition">Updates</a>
+                <a href="#" class="block text-sm text-wlLight text-opacity-70 hover:text-wlBlue transition">Patch Notes</a>
+                <a href="#" class="block text-sm text-wlLight text-opacity-70 hover:text-wlBlue transition">Community</a>
+                <a href="#" class="block text-sm text-wlLight text-opacity-70 hover:text-wlBlue transition">API</a>
+            </div>
+        </div>
+    </div>
+
+    <div class="min-h-screen flex flex-col">
+        <!-- Header -->
+        <header class="bg-wlDark bg-opacity-90 blur-bg shadow-lg sticky top-0 z-50">
+            <div class="container mx-auto px-4 py-4">
+                <div class="flex justify-between items-center">
+                    <div class="flex items-center space-x-4">
+                        <div class="w-10 h-10 rounded-full bg-gradient-to-br from-wlPurple to-wlBlue flex items-center justify-center">
+                            <i class="fas fa-dragon text-xl text-white"></i>
+                        </div>
+                        <h1 class="text-2xl font-bold bg-gradient-to-r from-wlBlue to-wlPurple gradient-text glow">
+                            Wonderland Online DB
+                        </h1>
+                    </div>
+                    <div class="hidden md:flex space-x-6 items-center">
+                        <a href="#" class="nav-link px-3 py-2 text-sm font-medium">Home</a>
+                        <a href="#" class="nav-link px-3 py-2 text-sm font-medium">Updates</a>
+                        <a href="#" class="nav-link px-3 py-2 text-sm font-medium">About</a>
+                        <a href="#" class="nav-link px-3 py-2 text-sm font-medium">Contact</a>
+                        <button class="ml-4 px-4 py-2 bg-gradient-to-r from-wlBlue to-wlPurple text-white rounded-md hover:opacity-90 transition">
+                            Login
+                        </button>
+                    </div>
+                    <div class="md:hidden">
+                        <button id="openSidebar" class="text-wlLight focus:outline-none">
+                            <i class="fas fa-bars text-2xl"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="flex-grow container mx-auto px-4 py-8">
+            <!-- Hero Section -->
+            <section class="text-center mb-12">
+                <div class="max-w-4xl mx-auto relative">
+                    <div class="absolute -top-20 -left-20 w-40 h-40 bg-wlPurple rounded-full filter blur-3xl opacity-20 animate-pulse-slow"></div>
+                    <div class="absolute -bottom-20 -right-20 w-40 h-40 bg-wlBlue rounded-full filter blur-3xl opacity-20 animate-pulse-slow"></div>
+                    
+                    <h2 class="text-4xl md:text-5xl font-bold mb-4 bg-gradient-to-r from-wlBlue to-wlPurple gradient-text glow">
+                        Wonderland Online Database
+                    </h2>
+                    <p class="text-lg md:text-xl max-w-3xl mx-auto mb-8">
+                        The most comprehensive database for Wonderland Online. Find items, quests, monsters, and everything you need to master the game.
+                    </p>
+                    
+                    <!-- Search Bar -->
+                    <div class="max-w-2xl mx-auto relative">
+                        <input type="text" 
+                               placeholder="Search items, monsters, quests..." 
+                               class="search-input w-full px-6 py-4 rounded-full bg-wlDark border border-wlLight border-opacity-30 text-wlLight focus:border-wlBlue transition duration-300">
+                        <button class="absolute right-3 top-3 bg-gradient-to-r from-wlBlue to-wlPurple text-white p-2 rounded-full hover:opacity-90 transition tooltip">
+                            <i class="fas fa-search"></i>
+                            <span class="tooltip-text">Press Enter to search</span>
+                        </button>
+                    </div>
+                    
+                    <div class="mt-6 flex justify-center space-x-4">
+                        <span class="text-sm text-wlLight text-opacity-70">Popular searches:</span>
+                        <a href="#" class="text-sm text-wlBlue hover:underline">Dragon Slayer</a>
+                        <a href="#" class="text-sm text-wlBlue hover:underline">Tower of Trials</a>
+                        <a href="#" class="text-sm text-wlBlue hover:underline">Ancient Hydra</a>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Categories Grid -->
+            <section class="mb-12">
+                <div class="flex justify-between items-center mb-6">
+                    <h3 class="text-2xl font-semibold text-wlLight">Database Categories</h3>
+                    <div class="relative">
+                        <button id="sortButton" class="flex items-center space-x-2 text-sm text-wlLight hover:text-wlBlue transition">
+                            <span>Sort by</span>
+                            <i class="fas fa-chevron-down text-xs"></i>
+                        </button>
+                        <div id="sortDropdown" class="hidden absolute right-0 mt-2 w-40 bg-wlDark rounded-md shadow-lg z-10">
+                            <a href="#" class="block px-4 py-2 text-sm hover:bg-wlDarker">Name (A-Z)</a>
+                            <a href="#" class="block px-4 py-2 text-sm hover:bg-wlDarker">Name (Z-A)</a>
+                            <a href="#" class="block px-4 py-2 text-sm hover:bg-wlDarker">Recently Updated</a>
+                        </div>
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-6">
+                    <!-- Items -->
+                    <a href="#" class="category-card bg-wlDark bg-opacity-70 rounded-xl p-6 border border-wlLight border-opacity-20 hover:border-wlBlue transition duration-300 card-hover flex flex-col items-center relative overflow-hidden">
+                        <div class="absolute -right-6 -bottom-6 w-24 h-24 bg-wlBlue rounded-full filter blur-xl opacity-10"></div>
+                        <div class="category-icon w-16 h-16 rounded-full bg-gradient-to-br from-wlBlue to-wlPurple flex items-center justify-center mb-4 floating-island">
+                            <i class="fas fa-cube text-2xl text-white"></i>
+                        </div>
+                        <h4 class="text-xl font-medium mb-2 text-center">Items</h4>
+                        <p class="text-sm text-wlLight text-opacity-70 text-center">Weapons, armor, consumables and more</p>
+                        <div class="mt-4 text-xs text-wlBlue">1,452 entries</div>
+                    </a>
+                    
+                    <!-- Quests -->
+                    <a href="#" class="category-card bg-wlDark bg-opacity-70 rounded-xl p-6 border border-wlLight border-opacity-20 hover:border-wlGreen transition duration-300 card-hover flex flex-col items-center relative overflow-hidden">
+                        <div class="absolute -right-6 -bottom-6 w-24 h-24 bg-wlGreen rounded-full filter blur-xl opacity-10"></div>
+                        <div class="category-icon w-16 h-16 rounded-full bg-gradient-to-br from-wlGreen to-emerald-500 flex items-center justify-center mb-4 floating-island">
+                            <i class="fas fa-scroll text-2xl text-white"></i>
+                        </div>
+                        <h4 class="text-xl font-medium mb-2 text-center">Quests</h4>
+                        <p class="text-sm text-wlLight text-opacity-70 text-center">Main story, side quests and events</p>
+                        <div class="mt-4 text-xs text-wlGreen">328 entries</div>
+                    </a>
+                    
+                    <!-- Guides -->
+                    <a href="#" class="category-card bg-wlDark bg-opacity-70 rounded-xl p-6 border border-wlLight border-opacity-20 hover:border-wlYellow transition duration-300 card-hover flex flex-col items-center relative overflow-hidden">
+                        <div class="absolute -right-6 -bottom-6 w-24 h-24 bg-wlYellow rounded-full filter blur-xl opacity-10"></div>
+                        <div class="category-icon w-16 h-16 rounded-full bg-gradient-to-br from-wlYellow to-amber-500 flex items-center justify-center mb-4 floating-island">
+                            <i class="fas fa-book-open text-2xl text-white"></i>
+                        </div>
+                        <h4 class="text-xl font-medium mb-2 text-center">Guides</h4>
+                        <p class="text-sm text-wlLight text-opacity-70 text-center">Walkthroughs, tips and strategies</p>
+                        <div class="mt-4 text-xs text-wlYellow">87 entries</div>
+                    </a>
+                    
+                    <!-- Monsters -->
+                    <a href="#" class="category-card bg-wlDark bg-opacity-70 rounded-xl p-6 border border-wlLight border-opacity-20 hover:border-wlRed transition duration-300 card-hover flex flex-col items-center relative overflow-hidden">
+                        <div class="absolute -right-6 -bottom-6 w-24 h-24 bg-wlRed rounded-full filter blur-xl opacity-10"></div>
+                        <div class="category-icon w-16 h-16 rounded-full bg-gradient-to-br from-wlRed to-pink-500 flex items-center justify-center mb-4 floating-island">
+                            <i class="fas fa-paw text-2xl text-white"></i>
+                        </div>
+                        <h4 class="text-xl font-medium mb-2 text-center">Monsters</h4>
+                        <p class="text-sm text-wlLight text-opacity-70 text-center">Enemies, bosses and their drops</p>
+                        <div class="mt-4 text-xs text-wlRed">542 entries</div>
+                    </a>
+                    
+                    <!-- Locations -->
+                    <a href="#" class="category-card bg-wlDark bg-opacity-70 rounded-xl p-6 border border-wlLight border-opacity-20 hover:border-wlBlue transition duration-300 card-hover flex flex-col items-center relative overflow-hidden">
+                        <div class="absolute -right-6 -bottom-6 w-24 h-24 bg-blue-400 rounded-full filter blur-xl opacity-10"></div>
+                        <div class="category-icon w-16 h-16 rounded-full bg-gradient-to-br from-blue-400 to-wlBlue flex items-center justify-center mb-4 floating-island">
+                            <i class="fas fa-map-marked-alt text-2xl text-white"></i>
+                        </div>
+                        <h4 class="text-xl font-medium mb-2 text-center">Locations</h4>
+                        <p class="text-sm text-wlLight text-opacity-70 text-center">Maps, dungeons and secret areas</p>
+                        <div class="mt-4 text-xs text-blue-400">124 entries</div>
+                    </a>
+                    
+                    <!-- Tier-List -->
+                    <a href="#" class="category-card bg-wlDark bg-opacity-70 rounded-xl p-6 border border-wlLight border-opacity-20 hover:border-wlPurple transition duration-300 card-hover flex flex-col items-center relative overflow-hidden">
+                        <div class="absolute -right-6 -bottom-6 w-24 h-24 bg-wlPurple rounded-full filter blur-xl opacity-10"></div>
+                        <div class="category-icon w-16 h-16 rounded-full bg-gradient-to-br from-wlPurple to-violet-500 flex items-center justify-center mb-4 floating-island">
+                            <i class="fas fa-trophy text-2xl text-white"></i>
+                        </div>
+                        <h4 class="text-xl font-medium mb-2 text-center">Tier-List</h4>
+                        <p class="text-sm text-wlLight text-opacity-70 text-center">Achievements and collectibles</p>
+                        <div class="mt-4 text-xs text-wlPurple">76 entries</div>
+                    </a>
+                    
+                    <!-- Shops -->
+                    <a href="#" class="category-card bg-wlDark bg-opacity-70 rounded-xl p-6 border border-wlLight border-opacity-20 hover:border-wlGreen transition duration-300 card-hover flex flex-col items-center relative overflow-hidden">
+                        <div class="absolute -right-6 -bottom-6 w-24 h-24 bg-emerald-400 rounded-full filter blur-xl opacity-10"></div>
+                        <div class="category-icon w-16 h-16 rounded-full bg-gradient-to-br from-emerald-400 to-wlGreen flex items-center justify-center mb-4 floating-island">
+                            <i class="fas fa-store text-2xl text-white"></i>
+                        </div>
+                        <h4 class="text-xl font-medium mb-2 text-center">Shops</h4>
+                        <p class="text-sm text-wlLight text-opacity-70 text-center">NPC vendors and their inventories</p>
+                        <div class="mt-4 text-xs text-emerald-400">43 entries</div>
+                    </a>
+                    
+                    <!-- Recycles -->
+                    <a href="#" class="category-card bg-wlDark bg-opacity-70 rounded-xl p-6 border border-wlLight border-opacity-20 hover:border-wlYellow transition duration-300 card-hover flex flex-col items-center relative overflow-hidden">
+                        <div class="absolute -right-6 -bottom-6 w-24 h-24 bg-amber-400 rounded-full filter blur-xl opacity-10"></div>
+                        <div class="category-icon w-16 h-16 rounded-full bg-gradient-to-br from-amber-400 to-wlYellow flex items-center justify-center mb-4 floating-island">
+                            <i class="fas fa-recycle text-2xl text-white"></i>
+                        </div>
+                        <h4 class="text-xl font-medium mb-2 text-center">Recycles</h4>
+                        <p class="text-sm text-wlLight text-opacity-70 text-center">Crafting and material conversion</p>
+                        <div class="mt-4 text-xs text-amber-400">29 entries</div>
+                    </a>
+                </div>
+            </section>
+
+            <!-- Recent Updates -->
+            <section class="mb-12">
+                <div class="flex justify-between items-center mb-6">
+                    <h3 class="text-2xl font-semibold text-wlLight">Recent Updates</h3>
+                    <a href="#" class="text-sm text-wlBlue hover:underline flex items-center">
+                        View all updates <i class="fas fa-arrow-right ml-1 text-xs"></i>
+                    </a>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <!-- Update 1 -->
+                    <div class="bg-wlDark bg-opacity-70 rounded-xl p-6 border border-wlLight border-opacity-20 hover:border-wlBlue transition duration-300 card-hover group">
+                        <div class="flex items-center mb-4">
+                            <div class="w-10 h-10 rounded-full bg-gradient-to-r from-wlBlue to-wlPurple flex items-center justify-center mr-3 group-hover:animate-pulse">
+                                <i class="fas fa-cube text-white"></i>
+                            </div>
+                            <div>
+                                <h4 class="font-medium">New Items Added</h4>
+                                <p class="text-xs text-wlLight text-opacity-70">2 days ago</p>
+                            </div>
+                        </div>
+                        <p class="text-sm text-wlLight text-opacity-90 mb-3">
+                            Added 15 new items from the latest expansion including the legendary "Dragon Slayer" sword.
+                        </p>
+                        <div class="flex justify-between items-center">
+                            <a href="#" class="text-wlBlue text-sm font-medium hover:underline flex items-center">
+                                View Items <i class="fas fa-chevron-right ml-1 text-xs"></i>
+                            </a>
+                            <span class="text-xs px-2 py-1 bg-wlBlue bg-opacity-20 text-wlBlue rounded">New</span>
+                        </div>
+                    </div>
+                    
+                    <!-- Update 2 -->
+                    <div class="bg-wlDark bg-opacity-70 rounded-xl p-6 border border-wlLight border-opacity-20 hover:border-wlGreen transition duration-300 card-hover group">
+                        <div class="flex items-center mb-4">
+                            <div class="w-10 h-10 rounded-full bg-gradient-to-r from-wlGreen to-emerald-500 flex items-center justify-center mr-3 group-hover:animate-pulse">
+                                <i class="fas fa-scroll text-white"></i>
+                            </div>
+                            <div>
+                                <h4 class="font-medium">Quest Guide Updated</h4>
+                                <p class="text-xs text-wlLight text-opacity-70">5 days ago</p>
+                            </div>
+                        </div>
+                        <p class="text-sm text-wlLight text-opacity-90 mb-3">
+                            Complete walkthrough for the new "Tower of Trials" event quest with optimal strategies.
+                        </p>
+                        <div class="flex justify-between items-center">
+                            <a href="#" class="text-wlGreen text-sm font-medium hover:underline flex items-center">
+                                Read Guide <i class="fas fa-chevron-right ml-1 text-xs"></i>
+                            </a>
+                            <span class="text-xs px-2 py-1 bg-wlGreen bg-opacity-20 text-wlGreen rounded">Updated</span>
+                        </div>
+                    </div>
+                    
+                    <!-- Update 3 -->
+                    <div class="bg-wlDark bg-opacity-70 rounded-xl p-6 border border-wlLight border-opacity-20 hover:border-wlRed transition duration-300 card-hover group">
+                        <div class="flex items-center mb-4">
+                            <div class="w-10 h-10 rounded-full bg-gradient-to-r from-wlRed to-pink-500 flex items-center justify-center mr-3 group-hover:animate-pulse">
+                                <i class="fas fa-paw text-white"></i>
+                            </div>
+                            <div>
+                                <h4 class="font-medium">Monster Data</h4>
+                                <p class="text-xs text-wlLight text-opacity-70">1 week ago</p>
+                            </div>
+                        </div>
+                        <p class="text-sm text-wlLight text-opacity-90 mb-3">
+                            Added drop rates for the new raid boss "Ancient Hydra" with detailed attack patterns.
+                        </p>
+                        <div class="flex justify-between items-center">
+                            <a href="#" class="text-wlRed text-sm font-medium hover:underline flex items-center">
+                                View Monster <i class="fas fa-chevron-right ml-1 text-xs"></i>
+                            </a>
+                            <span class="text-xs px-2 py-1 bg-wlRed bg-opacity-20 text-wlRed rounded">Verified</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Stats Section -->
+            <section class="mb-12 bg-wlDark bg-opacity-70 rounded-xl p-8">
+                <h3 class="text-2xl font-semibold mb-6 text-center">Database Statistics</h3>
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-6">
+                    <div class="text-center">
+                        <div class="text-4xl font-bold mb-2 text-wlBlue">1,452</div>
+                        <div class="text-sm text-wlLight text-opacity-70">Items</div>
+                    </div>
+                    <div class="text-center">
+                        <div class="text-4xl font-bold mb-2 text-wlGreen">328</div>
+                        <div class="text-sm text-wlLight text-opacity-70">Quests</div>
+                    </div>
+                    <div class="text-center">
+                        <div class="text-4xl font-bold mb-2 text-wlRed">542</div>
+                        <div class="text-sm text-wlLight text-opacity-70">Monsters</div>
+                    </div>
+                    <div class="text-center">
+                        <div class="text-4xl font-bold mb-2 text-wlPurple">124</div>
+                        <div class="text-sm text-wlLight text-opacity-70">Locations</div>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <!-- Footer -->
+        <footer class="bg-wlDark bg-opacity-90 blur-bg py-12">
+            <div class="container mx-auto px-4">
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
+                    <div>
+                        <div class="flex items-center space-x-3 mb-4">
+                            <div class="w-10 h-10 rounded-full bg-gradient-to-br from-wlPurple to-wlBlue flex items-center justify-center">
+                                <i class="fas fa-dragon text-xl text-white"></i>
+                            </div>
+                            <h4 class="text-lg font-semibold">Wonderland DB</h4>
+                        </div>
+                        <p class="text-sm text-wlLight text-opacity-70 mb-4">
+                            The most comprehensive database for Wonderland Online. Regularly updated with the latest game content.
+                        </p>
+                        <div class="flex space-x-4">
+                            <a href="#" class="w-8 h-8 rounded-full bg-wlDark bg-opacity-70 border border-wlLight border-opacity-20 flex items-center justify-center hover:bg-wlBlue transition">
+                                <i class="fab fa-discord text-sm text-wlLight"></i>
+                            </a>
+                            <a href="#" class="w-8 h-8 rounded-full bg-wlDark bg-opacity-70 border border-wlLight border-opacity-20 flex items-center justify-center hover:bg-blue-400 transition">
+                                <i class="fab fa-twitter text-sm text-wlLight"></i>
+                            </a>
+                            <a href="#" class="w-8 h-8 rounded-full bg-wlDark bg-opacity-70 border border-wlLight border-opacity-20 flex items-center justify-center hover:bg-pink-500 transition">
+                                <i class="fab fa-youtube text-sm text-wlLight"></i>
+                            </a>
+                        </div>
+                    </div>
+                    <div>
+                        <h4 class="text-lg font-semibold mb-4 text-wlLight">Quick Links</h4>
+                        <ul class="space-y-2">
+                            <li><a href="#" class="text-sm text-wlLight text-opacity-70 hover:text-wlBlue transition">Home</a></li>
+                            <li><a href="#" class="text-sm text-wlLight text-opacity-70 hover:text-wlBlue transition">Items Database</a></li>
+                            <li><a href="#" class="text-sm text-wlLight text-opacity-70 hover:text-wlBlue transition">Quest Guides</a></li>
+                            <li><a href="#" class="text-sm text-wlLight text-opacity-70 hover:text-wlBlue transition">Monster Encyclopedia</a></li>
+                        </ul>
+                    </div>
+                    <div>
+                        <h4 class="text-lg font-semibold mb-4 text-wlLight">Resources</h4>
+                        <ul class="space-y-2">
+                            <li><a href="#" class="text-sm text-wlLight text-opacity-70 hover:text-wlBlue transition">Game Updates</a></li>
+                            <li><a href="#" class="text-sm text-wlLight text-opacity-70 hover:text-wlBlue transition">Patch Notes</a></li>
+                            <li><a href="#" class="text-sm text-wlLight text-opacity-70 hover:text-wlBlue transition">Community Guides</a></li>
+                            <li><a href="#" class="text-sm text-wlLight text-opacity-70 hover:text-wlBlue transition">API Documentation</a></li>
+                        </ul>
+                    </div>
+                    <div>
+                        <h4 class="text-lg font-semibold mb-4 text-wlLight">Newsletter</h4>
+                        <p class="text-sm text-wlLight text-opacity-70 mb-4">
+                            Subscribe to get updates on new content and features.
+                        </p>
+                        <div class="flex">
+                            <input type="email" placeholder="Your email" class="flex-grow px-4 py-2 bg-wlDark border border-wlLight border-opacity-20 text-sm rounded-l focus:outline-none focus:border-wlBlue">
+                            <button class="px-4 py-2 bg-gradient-to-r from-wlBlue to-wlPurple text-white text-sm rounded-r hover:opacity-90 transition">
+                                Subscribe
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <div class="pt-6 border-t border-wlLight border-opacity-20">
+                    <p class="text-sm text-center text-wlLight text-opacity-70">
+                        © 2023 Wonderland Online DB. All game content and materials are trademarks of their respective owners.
+                    </p>
+                </div>
+            </div>
+        </footer>
+    </div>
+
+    <script>
+        // Mobile sidebar toggle
+        const openSidebar = document.getElementById('openSidebar');
+        const closeSidebar = document.getElementById('closeSidebar');
+        const mobileSidebar = document.getElementById('mobileSidebar');
+        const darkOverlay = document.getElementById('darkOverlay');
+        
+        openSidebar.addEventListener('click', () => {
+            mobileSidebar.classList.remove('sidebar-hidden');
+            mobileSidebar.classList.add('sidebar-visible');
+            darkOverlay.classList.add('dark-overlay-visible');
+        });
+        
+        closeSidebar.addEventListener('click', () => {
+            mobileSidebar.classList.remove('sidebar-visible');
+            mobileSidebar.classList.add('sidebar-hidden');
+            darkOverlay.classList.remove('dark-overlay-visible');
+        });
+        
+        darkOverlay.addEventListener('click', () => {
+            mobileSidebar.classList.remove('sidebar-visible');
+            mobileSidebar.classList.add('sidebar-hidden');
+            darkOverlay.classList.remove('dark-overlay-visible');
+        });
+        
+        // Sort dropdown toggle
+        const sortButton = document.getElementById('sortButton');
+        const sortDropdown = document.getElementById('sortDropdown');
+        
+        sortButton.addEventListener('click', () => {
+            sortDropdown.classList.toggle('hidden');
+        });
+        
+        // Close dropdown when clicking outside
+        document.addEventListener('click', (e) => {
+            if (!sortButton.contains(e.target) && !sortDropdown.contains(e.target)) {
+                sortDropdown.classList.add('hidden');
+            }
+        });
+        
+        // Search functionality
+        document.querySelector('.search-input').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                const query = this.value.trim();
+                if (query) {
+                    // In a real implementation, this would redirect to search results or fetch data
+                    // For demo purposes, we'll show a notification
+                    showNotification(`Searching for: ${query}`);
+                }
+            }
+        });
+        
+        // Show a temporary notification
+        function showNotification(message) {
+            const notification = document.createElement('div');
+            notification.className = 'fixed bottom-4 right-4 bg-wlDark px-6 py-3 rounded-lg shadow-lg flex items-center fade-in';
+            notification.innerHTML = `
+                <i class="fas fa-search text-wlBlue mr-2"></i>
+                <span>${message}</span>
+            `;
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.classList.add('opacity-0');
+                setTimeout(() => notification.remove(), 300);
+            }, 3000);
+        }
+        
+        // Add hover effect to category cards
+        document.querySelectorAll('.category-card').forEach(card => {
+            card.addEventListener('mouseenter', function() {
+                const icon = this.querySelector('.category-icon');
+                icon.style.transform = 'scale(1.2) rotateY(10deg)';
+            });
+            
+            card.addEventListener('mouseleave', function() {
+                const icon = this.querySelector('.category-icon');
+                icon.style.transform = 'scale(1) rotateY(0)';
+            });
+        });
+        
+        // Add animation to hero section elements
+        const heroElements = document.querySelectorAll('section.text-center h2, section.text-center p, section.text-center .max-w-2xl');
+        heroElements.forEach((el, index) => {
+            el.style.opacity = '0';
+            el.style.transform = 'translateY(20px)';
+            setTimeout(() => {
+                el.style.transition = 'opacity 0.5s ease, transform 0.5s ease';
+                el.style.opacity = '1';
+                el.style.transform = 'translateY(0)';
+            }, 100 + (index * 100));
+        });
+    </script>
+</body>
+</html>
+</qodoArtifact>
+I have updated the file content. Let me know if you need anything else!

@@ -1,0 +1,989 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Locations - Wonderland Online DB</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        wlBlue: '#3b82f6',
+                        wlPurple: '#8b5cf6',
+                        wlGreen: '#10b981',
+                        wlRed: '#ef4444',
+                        wlYellow: '#f59e0b',
+                        wlDark: '#1e293b',
+                        wlDarker: '#0f172a',
+                        wlLight: '#f1f5f9', 
+                    },
+                    animation: {
+                        'float': 'float 6s ease-in-out infinite',
+                        'float-fast': 'float 4s ease-in-out infinite',
+                        'pulse-slow': 'pulse 8s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                        'modal-scale-in': 'modalScaleIn 0.3s ease-out forwards',
+                        'modal-fade-in': 'modalFadeIn 0.3s ease-out forwards',
+                    },
+                    keyframes: {
+                        float: {
+                            '0%, 100%': { transform: 'translateY(0)' },
+                            '50%': { transform: 'translateY(-10px)' },
+                        },
+                        modalScaleIn: {
+                            '0%': { opacity: 0, transform: 'scale(0.95) translateY(10px)' },
+                            '100%': { opacity: 1, transform: 'scale(1) translateY(0)' },
+                        },
+                        modalFadeIn: {
+                            '0%': { opacity: 0 },
+                            '100%': { opacity: 1 },
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+        
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: #0f172a; /* wlDarker */
+            background-image: 
+                radial-gradient(at 20% 30%, rgba(59, 130, 246, 0.15) 0px, transparent 50%),
+                radial-gradient(at 80% 0%, rgba(139, 92, 246, 0.15) 0px, transparent 50%),
+                radial-gradient(at 0% 50%, rgba(239, 68, 68, 0.1) 0px, transparent 50%);
+            background-size: cover;
+            background-attachment: fixed;
+            background-position: center;
+            background-blend-mode: overlay;
+            min-height: 100vh;
+        }
+        
+        .card-hover {
+            transition: all 0.3s ease;
+            transform-style: preserve-3d;
+        }
+        
+        .card-hover:hover {
+            transform: translateY(-5px) scale(1.02) rotateX(1deg);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.2), 0 10px 10px -5px rgba(0, 0, 0, 0.1);
+        }
+        
+        .search-input:focus { /* This existing style might be overridden by Tailwind focus utilities on new inputs */
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.5); 
+        }
+        
+        .nav-link { position: relative; }
+        .nav-link::after {
+            content: ''; position: absolute; width: 0; height: 2px;
+            bottom: 0; left: 0; background-color: currentColor;
+            transition: width 0.3s ease;
+        }
+        .nav-link.active::after { width: 100%; } 
+        .nav-link:hover::after { width: 100%; }
+        
+        .glow { text-shadow: 0 0 10px rgba(139, 92, 246, 0.7); }
+        .gradient-text { background-clip: text; -webkit-background-clip: text; color: transparent; }
+        .blur-bg { backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); }
+        
+        .tooltip { position: relative; }
+        .tooltip:hover .tooltip-text { visibility: visible; opacity: 1; transform: translateY(0); }
+        .tooltip-text {
+            visibility: hidden; opacity: 0; position: absolute; z-index: 10;
+            bottom: 125%; left: 50%; transform: translateX(-50%) translateY(10px);
+            background-color: #1e293b; color: white; text-align: center;
+            padding: 5px 10px; border-radius: 6px; transition: all 0.3s ease;
+            width: max-content; max-width: 200px; font-size: 0.8rem;
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -1px rgba(0,0,0,0.06);
+        }
+        .tooltip-text::after {
+            content: ""; position: absolute; top: 100%; left: 50%; margin-left: -5px;
+            border-width: 5px; border-style: solid; border-color: #1e293b transparent transparent transparent;
+        }
+        
+        .fade-in { animation: fadeIn 0.5s ease-in forwards; }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .sidebar { transition: transform 0.3s ease; }
+        .sidebar-hidden { transform: translateX(100%); }
+        .sidebar-visible { transform: translateX(0); }
+        
+        .dark-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background-color: rgba(0,0,0,0.5); z-index: 40; opacity: 0;
+            pointer-events: none; transition: opacity 0.3s ease;
+        }
+        .dark-overlay-visible { opacity: 1; pointer-events: auto; }
+
+        #interactiveMapContainer {
+            position: relative;
+            width: 100%;
+            max-width: 900px; 
+            margin: 0 auto;
+            border: 2px solid rgba(241, 245, 249, 0.2); 
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+        #worldMapImage {
+            display: block;
+            width: 100%;
+            height: auto;
+        }
+        .map-marker {
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            background-color: rgba(239, 68, 68, 0.8); 
+            border-radius: 50%;
+            border: 2px solid #f1f5f9; 
+            cursor: pointer;
+            transition: transform 0.2s ease, background-color 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .map-marker:hover {
+            transform: scale(1.3);
+            background-color: rgba(245, 158, 11, 0.9); 
+        }
+        .map-marker i {
+            color: #f1f5f9; 
+            font-size: 10px;
+        }
+
+        #locationDetailSection {
+            background-color: rgba(30, 41, 59, 0.7); 
+            border: 1px solid rgba(241, 245, 249, 0.1); 
+            border-radius: 0.75rem;
+            padding: 1.5rem;
+            margin-top: 2rem;
+            animation: fadeIn 0.5s ease-out;
+        }
+        #locationDetailSection h3 {
+            color: #f1f5f9; 
+        }
+        .detail-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+        }
+        .detail-card {
+            background-color: #0f172a; 
+            padding: 1rem;
+            border-radius: 0.5rem;
+            border: 1px solid rgba(241, 245, 249, 0.1);
+        }
+        .detail-card h4 {
+            color: #8b5cf6; 
+            margin-bottom: 0.5rem;
+        }
+        .detail-card ul {
+            list-style-type: disc;
+            margin-left: 1.5rem;
+            font-size: 0.9rem;
+            color: rgba(241, 245, 249, 0.8); 
+        }
+        .detail-card img {
+            max-width: 100%;
+            border-radius: 0.375rem;
+            margin-top: 0.75rem;
+            border: 1px solid rgba(241, 245, 249, 0.1);
+        }
+        .results-fade-in {
+      animation: resultsFadeIn 0.65s cubic-bezier(.39,.68,.54,1.01);
+    }
+    @keyframes resultsFadeIn {
+      from { opacity: 0; transform: translateY(20px) scale(0.97);}
+      to   { opacity: 1; transform: translateY(0) scale(1);}
+    }
+    /* Result card hover effect and focus for accessibility */
+    .result-card:focus-visible {
+        outline: 2.5px solid #3b82f6;
+        outline-offset: 2px;
+    }
+    .result-card.selected, .result-card:hover {
+        border-color: #f59e0b !important;
+        background: linear-gradient(90deg,#241887 0 7%,#2563eb11 50%,#0f172a 100%);
+        box-shadow: 0 4px 24px -7px #8b5cf631, 0 1.5px 9px -7px #f59e0b76;
+        color: #f59e0b;
+        cursor: pointer;
+        transition: all 0.2s cubic-bezier(.39,.68,.54,1.01)!important;
+    }
+    /* Badge style for numbers */
+    .search-badge {
+        font-size: 0.95rem;
+        border-radius: 8px;
+        font-weight: 500;
+        padding: 1.5px 9px 1.5px 8px;
+        margin-left: 6px;
+        background: linear-gradient(90deg,#8b5cf66b 20%,#3b82f633 100%);
+        color: #f1f5f9ba;
+        display: inline-flex;
+        align-items: center;
+    }
+    /* Placeholder icon animation for empty state */
+    .search-empty-icon {
+        font-size: 2.1rem !important;
+        color: #8b5cf6b2;
+        animation: glowRotate 2.2s linear infinite;
+        display: block;
+        margin-bottom: 0.4rem;
+    }
+    @keyframes glowRotate {
+        0% { filter: drop-shadow(0 0 9px #8b5cf6a1);}
+        50% { filter: drop-shadow(0 0 18px #8b5cf66a);}
+        100% { filter: drop-shadow(0 0 9px #8b5cf6a1);}
+    }
+
+    /* Responsive search list grid: 2 columns on md+, 1 on mobile */
+    #searchResultsList {
+        display: grid;
+        grid-template-columns: repeat(auto-fit,minmax(290px,1fr));
+        gap: 1.15rem;
+    }
+    @keyframes modalScaleIn {
+        from { opacity: 0; transform: scale(0.96) translateY(30px);}
+        to   { opacity: 1; transform: scale(1) translateY(0);}
+    }
+    .animate-modalScaleIn { animation: modalScaleIn 0.35s cubic-bezier(.23,.98,.23,1.01);}
+    .blurred-bg { filter: blur(5px) !important; pointer-events: none !important; }
+    .sr-only { position: absolute; width: 1px; height: 1px; margin: -1px; border: 0; padding: 0; overflow: hidden; clip: rect(0,0,0,0);}
+    .result-thumbnail {
+        width: 80px; height: 60px;
+        border-radius: 0.6rem;
+        margin-right: 1.2rem;
+        object-fit: cover; object-position: center;
+        box-shadow: 0 4px 14px -3px #3b82f674;
+        border: 1.5px solid #374151;
+        transition: transform 0.13s;
+    }
+    .result-card.selected .result-thumbnail,
+    .result-card:hover .result-thumbnail {
+        outline: 2.5px solid #f59e0b;
+        transform: scale(1.07) rotate(-1.5deg);
+        filter: brightness(1.13);
+        box-shadow: 0 6px 16px -2px #f59e0b56;
+    }
+    /* Modal overlay background blur for app (optional) */
+    #filterModalBg[aria-modal="true"] ~ .min-h-screen { filter: blur(5px);}
+
+    /* Responsive SEARCH BAR and BUTTONS */
+@media (max-width: 640px) {
+  #searchFilterControls .grid {
+    display: block !important;
+  }
+  #searchFilterControls > div,
+  #searchFilterControls .md\:col-span-2 {
+    width: 100%;
+    max-width: 100%;
+  }
+  #searchFilterControls label,
+  #searchFilterControls input,
+  #searchFilterControls button {
+    font-size: 1.03rem !important;
+  }
+  #searchFilterControls input {
+    min-height: 2.5em;
+    padding: 0.9em 0.85em;
+  }
+  #searchFilterControls .flex {
+    flex-direction: column;
+    gap: 0.6rem;
+  }
+  #searchFilterControls button {
+    width: 100% !important;
+    margin-bottom: 0.3rem;
+    font-weight: 600;
+    font-size: 1.06rem;
+    padding: 0.85em 0.7em;
+  }
+}
+
+/* Responsive SEARCH RESULTS LIST */
+@media (max-width: 640px) {
+  #searchResultsList {
+    grid-template-columns: 1fr !important;
+    gap: 0.7rem !important;
+  }
+  .result-card {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    padding: 0.95em 0.7em !important;
+    min-width: 0;
+  }
+  .result-thumbnail {
+    width: 100%;
+    max-width: 230px;
+    height: 50vw;
+    max-height: 110px;
+    min-height: 52px;
+    margin: 0 auto 0.8em auto;
+    display: block;
+    border-radius: 0.8em;
+  }
+  .result-card > .flex-1 {
+    width: 100%;
+    padding-right: 0;
+  }
+  .result-card .absolute.top-4.right-6 {
+    position: static !important;
+    margin-top: 0.9em;
+    margin-bottom: 0.1em;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+  }
+  .result-card .font-bold.text-xl {
+    font-size: 1.12rem !important;
+    margin-bottom: 0.16em !important;
+    padding-right: 0 !important;
+  }
+  .result-card .grid.sm\:grid-cols-2 {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+/* Better tap target on result cards */
+.result-card {
+  min-width: 0;
+  word-break: break-word;
+  transition: box-shadow .14s, border .12s;
+  touch-action: manipulation;
+}
+.result-card:active {
+  border-color: #38bdf8 !important;
+  box-shadow: 0 1.5px 16px 0 #38bdf844;
+}
+
+/* FILTER MODAL on small screens */
+@media (max-width: 600px) {
+  #filterModal {
+    max-width: 98vw !important;
+    padding: 1.1em 0.8em 1.4em 0.8em !important;
+    border-radius: 1.1em !important;
+  }
+  #filterModal h2 {
+    font-size: 1.25rem !important;
+    margin-bottom: 1.05em !important;
+  }
+  #filterModal label,
+  #filterModal input,
+  #filterModal button {
+    font-size: 1rem !important;
+  }
+  #filterModal input {
+    min-height: 2.15em !important;
+    padding: 0.6em 0.88em !important;
+    border-radius: 0.6em !important;
+  }
+  #filterModal .flex.gap-4.mt-6 {
+    flex-direction: column !important;
+    gap: 0.75em !important;
+  }
+  #filterModal .flex.gap-4.items-center {
+    flex-direction: column !important;
+    gap: 0.5em !important;
+    align-items: flex-start !important;
+  }
+}
+
+/* Hide overflow and prevent accidental horizontal scroll */
+html, body {
+  max-width: 100vw;
+  overflow-x: hidden;
+}
+
+/* Adjust details modal/grid on mobile */
+@media (max-width: 640px) {
+  .detail-grid {
+    grid-template-columns: 1fr !important;
+    gap: 1em !important;
+  }
+  #locationDetailSection {
+    padding: 0.7em 0.2em !important;
+  }
+}
+
+</style>
+</head>
+<body class="text-wlLight"> 
+    <div id="darkOverlay" class="dark-overlay"></div>
+    <div id="mobileSidebar" class="sidebar sidebar-hidden fixed inset-y-0 right-0 w-64 bg-wlDarker z-50 shadow-2xl p-4 overflow-y-auto">
+        <div class="flex justify-between items-center mb-8">
+            <div class="w-10 h-10 rounded-full bg-gradient-to-br from-wlPurple to-wlBlue flex items-center justify-center">
+                <i class="fas fa-dragon text-xl text-white"></i>
+            </div>
+            <button id="closeSidebar" class="hover:text-wlRed">
+                <i class="fas fa-times text-xl"></i>
+            </button>
+        </div>
+        <nav class="space-y-4">
+            <a href="Dog.html" class="block px-4 py-2 rounded-md font-medium hover:bg-wlDark hover:bg-opacity-50 transition">Home</a>
+            <a href="#" class="block px-4 py-2 rounded-md font-medium hover:bg-wlDark hover:bg-opacity-50 transition">Items</a>
+            <a href="#" class="block px-4 py-2 rounded-md font-medium hover:bg-wlDark hover:bg-opacity-50 transition">Quests</a>
+            <a href="monsters.html" class="block px-4 py-2 rounded-md font-medium hover:bg-wlDark hover:bg-opacity-50 transition">Monsters</a>
+            <a href="locations.html" class="block px-4 py-2 rounded-md font-medium bg-wlDark bg-opacity-50 transition">Locations</a> <!-- Active Page -->
+            <a href="#" class="block px-4 py-2 rounded-md font-medium hover:bg-wlDark hover:bg-opacity-50 transition">Guides</a>
+            <a href="#" class="block px-4 py-2 rounded-md font-medium hover:bg-wlDark hover:bg-opacity-50 transition">Shops</a>
+            <a href="#" class="block px-4 py-2 rounded-md font-medium hover:bg-wlDark hover:bg-opacity-50 transition">Recycles</a>
+        </nav>
+    </div>
+
+    <div class="min-h-screen flex flex-col">
+        <header class="bg-wlDark bg-opacity-90 blur-bg shadow-lg sticky top-0 z-30">
+            <div class="container mx-auto px-4 py-4">
+                <div class="flex justify-between items-center">
+                    <a href="Dog.html" class="flex items-center space-x-4">
+                        <div class="w-10 h-10 rounded-full bg-gradient-to-br from-wlPurple to-wlBlue flex items-center justify-center">
+                            <i class="fas fa-dragon text-xl text-white"></i>
+                        </div>
+                        <h1 class="text-2xl font-bold bg-gradient-to-r from-wlBlue to-wlPurple gradient-text glow">
+                            Wonderland Online DB
+                        </h1>
+                    </a>
+                    <div class="hidden md:flex space-x-6 items-center">
+                        <a href="Dog.html" class="nav-link px-3 py-2 text-sm font-medium">Home</a>
+                        <a href="monsters.html" class="nav-link px-3 py-2 text-sm font-medium">Monsters</a>
+                        <a href="locations.html" class="nav-link px-3 py-2 text-sm font-medium active">Locations</a>
+                        <a href="#" class="nav-link px-3 py-2 text-sm font-medium">Updates</a>
+                        <button class="ml-4 px-4 py-2 bg-gradient-to-r from-wlBlue to-wlPurple text-white rounded-md hover:opacity-90 transition">
+                            Login
+                        </button>
+                    </div>
+                    <div class="md:hidden">
+                        <button id="openSidebar" class="focus:outline-none">
+                            <i class="fas fa-bars text-2xl"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <main class="flex-grow container mx-auto px-4 py-8">
+            <section class="text-center mb-12">
+                <div class="max-w-4xl mx-auto relative">
+                    <div class="absolute -top-10 -left-10 w-32 h-32 bg-wlGreen rounded-full filter blur-3xl opacity-20 animate-pulse-slow"></div>
+                    <div class="absolute -bottom-10 -right-10 w-32 h-32 bg-wlBlue rounded-full filter blur-3xl opacity-20 animate-pulse-slow"></div>
+                    <h2 class="text-4xl md:text-5xl font-bold mb-4 bg-gradient-to-r from-wlGreen to-wlBlue gradient-text glow">
+                        Explore the World
+                    </h2>
+                    <p class="text-lg md:text-xl max-w-3xl mx-auto mb-8">
+                        Discover new lands, hidden dungeons, and bustling towns. Click on a location to see its details.
+                    </p>
+                </div>
+            </section>
+
+            <section id="interactiveMapSection" class="mb-12">
+                <div id="interactiveMapContainer" class="bg-wlDark bg-opacity-50 p-2 sm:p-4 rounded-lg shadow-xl">
+                    <img id="worldMapImage" src="https://via.placeholder.com/900x600.png?text=Wonderland+World+Map" alt="World Map of Wonderland">
+                    
+                    <div class="map-marker" style="top: 20%; left: 30%;" data-location-id="1" title="North Island">
+                        <i class="fas fa-map-pin"></i>
+                    </div>
+                    <div class="map-marker" style="top: 50%; left: 55%;" data-location-id="2" title="South Village">
+                        <i class="fas fa-map-pin"></i>
+                    </div>
+                    <div class="map-marker" style="top: 75%; left: 25%;" data-location-id="3" title="Ancient Ruins">
+                        <i class="fas fa-map-pin"></i>
+                    </div>
+                    <div class="map-marker" style="top: 35%; left: 70%;" data-location-id="4" title="Dragon's Peak">
+                        <i class="fas fa-map-pin"></i>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Search and Filter Section -->
+            <section id="searchFilterControls" class="my-8 p-6 bg-wlDark bg-opacity-70 blur-bg rounded-lg shadow-xl">
+                <div class="grid md:grid-cols-3 gap-6 items-end">
+                    <div class="md:col-span-2">
+                        <label for="searchInput" class="block text-sm font-medium text-wlLight mb-2">Search Locations or Monsters</label>
+                        <input type="text" id="searchInput" placeholder="E.g., North Island, Ice Fairy, or 12 (for level)"
+                               class="w-full px-4 py-2.5 bg-wlDarker border border-wlLight border-opacity-30 rounded-md focus:ring-2 focus:ring-wlRed focus:border-wlRed text-wlLight placeholder-wlLight placeholder-opacity-60 transition duration-150 ease-in-out">
+                    </div>
+                    <div class="flex space-x-3">
+                        <button id="searchButton" class="w-full flex-1 bg-wlBlue hover:bg-blue-600 text-white font-semibold py-2.5 px-4 rounded-md transition duration-150 ease-in-out flex items-center justify-center shadow-md hover:shadow-lg">
+                            <i class="fas fa-search mr-2"></i>Search
+                        </button>
+                        <button id="filterButton" class="w-full flex-1 bg-wlPurple hover:bg-purple-600 text-white font-semibold py-2.5 px-4 rounded-md transition duration-150 ease-in-out flex items-center justify-center shadow-md hover:shadow-lg">
+                            <i class="fas fa-filter mr-2"></i>Filter
+                        </button>
+                    </div>
+                </div>
+                <!-- Filter options could be expanded here or managed via a modal triggered by the Filter button -->
+            </section>
+
+            <section id="searchResultsSection" class="my-8 hidden fade-in">
+                <div class="flex items-center mb-3 gap-2">
+                    <h4 class="text-2xl font-bold gradient-text bg-gradient-to-r from-wlBlue to-wlPurple glow flex items-center">
+                        <i class="fas fa-list mr-2"></i>Results
+                    </h4>
+                    <span id="searchResultsCount" class="search-badge hidden"></span>
+                </div>
+                <ul id="searchResultsList"></ul>
+                <div id="searchResultsEmpty" class="hidden text-center my-8 py-5 text-wlLight/80">
+                    <div><i class="fas fa-search-location search-empty-icon"></i></div>
+                    <div class="font-semibold text-lg">No results found.</div>
+                    <div class="text-sm text-wlLight/60 mt-1">Try searching by <span class="text-wlGreen">location</span> or <span class="text-wlPurple">monster name</span>.<br>Eg: <b>North Island</b>, <b>Ice Fairy</b>, <b>12</b></div>
+                </div>
+            </section>
+
+            <section id="locationDetailSection" class="hidden">
+                <div class="flex justify-between items-center mb-6">
+                    <h3 id="locationName" class="text-3xl font-semibold">Location Name</h3>
+                    <button id="closeLocationDetail" class="text-wlLight hover:text-wlRed text-2xl">
+                        <i class="fas fa-times-circle"></i>
+                    </button>
+                </div>
+                
+                <div class="detail-grid">
+                    <div class="detail-card">
+                        <h4 class="text-xl font-semibold"><i class="fas fa-map-signs mr-2"></i>Map Layout</h4>
+                        <img id="locationMapImage" src="https://via.placeholder.com/400x300.png?text=Location+Map" alt="Location Map Layout" class="rounded-md shadow">
+                    </div>
+
+                    <div class="detail-card">
+                        <h4 class="text-xl font-semibold"><i class="fas fa-paw mr-2"></i>Monsters</h4>
+                        <ul id="locationMonstersList">
+                            <li>Loading monsters...</li>
+                        </ul>
+                    </div>
+
+                    <div class="detail-card">
+                        <h4 class="text-xl font-semibold"><i class="fas fa-user-friends mr-2"></i>NPCs</h4>
+                        <ul id="locationNpcsList">
+                            <li>Loading NPCs...</li>
+                        </ul>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <footer class="bg-wlDark bg-opacity-90 blur-bg py-12 mt-auto">
+            <div class="container mx-auto px-4">
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
+                    <div>
+                        <div class="flex items-center space-x-3 mb-4">
+                            <div class="w-10 h-10 rounded-full bg-gradient-to-br from-wlPurple to-wlBlue flex items-center justify-center">
+                                <i class="fas fa-dragon text-xl text-white"></i></div>
+                            <h3 class="text-lg font-semibold">Wonderland Online DB</h3>
+                        </div>
+                        <p class="text-sm text-opacity-70">Your ultimate resource for Wonderland Online game data.</p>
+                    </div>
+                    <div>
+                        <h4 class="text-md font-semibold mb-4">Quick Nav</h4>
+                        <ul class="space-y-2 text-sm">
+                            <li><a href="Dog.html" class="text-opacity-70 hover:text-wlBlue transition">Home</a></li>
+                            <li><a href="#" class="text-opacity-70 hover:text-wlBlue transition">Items</a></li>
+                            <li><a href="monsters.html" class="text-opacity-70 hover:text-wlBlue transition">Monsters</a></li>
+                            <li><a href="locations.html" class="text-opacity-70 hover:text-wlBlue transition">Locations</a></li>
+                        </ul>
+                    </div>
+                    <div>
+                        <h4 class="text-md font-semibold mb-4">Community</h4>
+                        <ul class="space-y-2 text-sm">
+                            <li><a href="#" class="text-opacity-70 hover:text-wlBlue transition">Forums</a></li>
+                            <li><a href="#" class="text-opacity-70 hover:text-wlBlue transition">Discord</a></li>
+                        </ul>
+                    </div>
+                    <div>
+                        <h4 class="text-md font-semibold mb-4">Legal</h4>
+                        <ul class="space-y-2 text-sm">
+                            <li><a href="#" class="text-opacity-70 hover:text-wlBlue transition">Privacy Policy</a></li>
+                            <li><a href="#" class="text-opacity-70 hover:text-wlBlue transition">Terms of Service</a></li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="border-t border-wlLight border-opacity-20 pt-8 text-center text-sm text-opacity-50">
+                    &copy; 2024 Wonderland Online DB. All rights reserved. Game content and materials are trademarks and copyrights of their respective publisher and its licensors.
+                </div>
+            </div>
+        </footer>
+    </div>
+
+    <div id="filterModalBg" class="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 hidden transition">
+    <div id="filterModal" class="bg-wlDarker w-full max-w-lg mx-auto rounded-2xl border border-wlBlue shadow-2xl p-7 relative animate-modalScaleIn">
+        <button id="closeFilterModal" aria-label="Close filter" class="absolute top-3 right-4 text-wlLight hover:text-wlRed text-3xl">
+            <i class="fas fa-times-circle"></i>
+        </button>
+        <h2 class="text-2xl font-bold mb-6 gradient-text bg-gradient-to-r from-wlBlue to-wlPurple glow flex items-center"><i class="fas fa-filter mr-2"></i>Filter Locations</h2>
+        <form id="filterForm" class="space-y-5 text-wlLight text-md">
+            <div>
+                <label class="block mb-1" for="filterMonsterName"><i class="fas fa-paw mr-1 text-wlPurple"></i>Monster Name</label>
+                <input id="filterMonsterName" type="text" class="w-full px-4 py-2 bg-wlDarker border border-wlLight border-opacity-30 rounded-md focus:ring-2 focus:ring-wlPurple focus:border-wlPurple text-wlLight placeholder-wlLight placeholder-opacity-60 transition" placeholder="e.g. Wolf, Fairy" autocomplete="off">
+            </div>
+            <div class="flex gap-4 items-center">
+                <label class="block w-32"><i class="fas fa-layer-group mr-1 text-wlBlue"></i>Monster Level</label>
+                <input id="filterLevelMin" type="number" min="1" max="999" class="w-24 px-2.5 py-2 bg-wlDarker border border-wlLight border-opacity-30 rounded-md focus:ring-2 focus:ring-wlBlue focus:border-wlBlue text-wlLight placeholder-wlLight/50 transition" placeholder="Min">
+                <span class="text-wlLight/50 mx-2">to</span>
+                <input id="filterLevelMax" type="number" min="1" max="999" class="w-24 px-2.5 py-2 bg-wlDarker border border-wlLight border-opacity-30 rounded-md focus:ring-2 focus:ring-wlBlue focus:border-wlBlue text-wlLight placeholder-wlLight/50 transition" placeholder="Max">
+            </div>
+            <div class="flex gap-4 mt-6">
+                <button type="submit" class="flex-1 py-2 px-4 rounded-md bg-wlBlue hover:bg-wlGreen text-white font-semibold text-lg transition"><i class="fas fa-check mr-1"></i>Apply</button>
+                <button type="button" id="resetFilter" class="flex-1 py-2 px-4 rounded-md bg-wlDarker border border-wlRed hover:bg-wlRed text-wlRed hover:text-white font-semibold text-lg transition"><i class="fas fa-redo-alt mr-1"></i>Reset</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const openSidebarBtn = document.getElementById('openSidebar');
+            const closeSidebarBtn = document.getElementById('closeSidebar');
+            const mobileSidebarEl = document.getElementById('mobileSidebar');
+            const darkOverlayEl = document.getElementById('darkOverlay');
+
+            if (openSidebarBtn) {
+                openSidebarBtn.addEventListener('click', () => {
+                    mobileSidebarEl.classList.remove('sidebar-hidden');
+                    mobileSidebarEl.classList.add('sidebar-visible');
+                    darkOverlayEl.classList.add('dark-overlay-visible');
+                });
+            }
+            if (closeSidebarBtn) {
+                closeSidebarBtn.addEventListener('click', () => {
+                    mobileSidebarEl.classList.remove('sidebar-visible');
+                    mobileSidebarEl.classList.add('sidebar-hidden');
+                    darkOverlayEl.classList.remove('dark-overlay-visible');
+                });
+            }
+            if (darkOverlayEl) {
+                darkOverlayEl.addEventListener('click', () => { 
+                    mobileSidebarEl.classList.remove('sidebar-visible');
+                    mobileSidebarEl.classList.add('sidebar-hidden');
+                    darkOverlayEl.classList.remove('dark-overlay-visible');
+                });
+            }
+
+    const mapMarkers = document.querySelectorAll('.map-marker');
+    const locationDetailSection = document.getElementById('locationDetailSection');
+    const locationNameEl = document.getElementById('locationName');
+    const locationMapImageEl = document.getElementById('locationMapImage');
+    const locationMonstersListEl = document.getElementById('locationMonstersList');
+    const locationNpcsListEl = document.getElementById('locationNpcsList');
+    const closeLocationDetailBtn = document.getElementById('closeLocationDetail');
+
+    const searchInput = document.getElementById('searchInput');
+    const searchButton = document.getElementById('searchButton');
+    const filterButton = document.getElementById('filterButton');
+    const searchResultsSection = document.getElementById('searchResultsSection');
+    const searchResultsList = document.getElementById('searchResultsList');
+    const searchResultsCount = document.getElementById('searchResultsCount');
+    const searchResultsEmpty = document.getElementById('searchResultsEmpty');
+
+    // FILTER MODAL refs
+    const filterModalBg = document.getElementById('filterModalBg');
+    const filterModal = document.getElementById('filterModal');
+    const closeFilterModal = document.getElementById('closeFilterModal');
+    const filterForm = document.getElementById('filterForm');
+    const resetFilter = document.getElementById('resetFilter');
+    const filterMonsterName = document.getElementById('filterMonsterName');
+    const filterLevelMin = document.getElementById('filterLevelMin');
+    const filterLevelMax = document.getElementById('filterLevelMax');
+
+    // Data
+    const locationsData = {
+        "1": { 
+            name: "North Island", 
+            mapImage: "https://via.placeholder.com/400x300.png?text=North+Island+Map",
+            monsters: [
+                { name: "Ice Fairy", level: 10 }, 
+                { name: "Snow Wolf", level: 12 }, 
+                { name: "Glacier Spirit", level: 15 }
+            ],
+            npcs: ["Fisherman Kai", "Elder Willow", "Mysterious Trader"]
+        },
+        "2": { 
+            name: "South Village", 
+            mapImage: "https://via.placeholder.com/400x300.png?text=South+Village+Map",
+            monsters: [
+                { name: "Wild Boar", level: 5 }, 
+                { name: "Forest Spider", level: 7 }
+            ],
+            npcs: ["Mayor Hamish", "Innkeeper Betty", "Blacksmith John"]
+        },
+        "3": { 
+            name: "Ancient Ruins", 
+            mapImage: "https://via.placeholder.com/400x300.png?text=Ancient+Ruins+Map",
+            monsters: [
+                { name: "Stone Golem", level: 25 }, 
+                { name: "Undead Warrior", level: 28 }, 
+                { name: "Ruin Guardian", level: 30 }
+            ],
+            npcs: ["Archaeologist Lina", "Ghostly Apparition"]
+        },
+         "4": {
+            name: "Dragon's Peak",
+            mapImage: "https://via.placeholder.com/400x300.png?text=Dragon's+Peak+Map",
+            monsters: [
+                { name: "Young Wyvern", level: 42 }, 
+                { name: "Fire Drake", level: 45 }, 
+                { name: "Peak Griffin", level: 48 }
+            ],
+            npcs: ["Hermit Oracle", "Dragon Cultist (Hostile)"]
+        }
+    };
+
+    // --- FILTER MODAL (modal display logic)
+    let activeFilters = {};
+    let activeSearchTerm = "";
+
+    function showFilterModal() {
+        filterModalBg.classList.remove('hidden');
+        filterModalBg.setAttribute('aria-modal','true');
+        document.body.style.overflow='hidden';
+        setTimeout(()=>filterMonsterName.focus(),150);
+    }
+    function hideFilterModal() {
+        filterModalBg.classList.add('hidden');
+        filterModalBg.removeAttribute('aria-modal');
+        document.body.style.overflow='';
+    }
+    if(filterButton) filterButton.addEventListener('click', showFilterModal);
+    if(closeFilterModal) closeFilterModal.addEventListener('click', hideFilterModal);
+    if(filterModalBg) filterModalBg.addEventListener('click', function(e){
+        if(e.target===filterModalBg) hideFilterModal();
+    });
+    document.addEventListener('keydown', e=>{
+        if(!filterModalBg.classList.contains('hidden') && e.key==="Escape") hideFilterModal();
+    });
+
+    if(resetFilter) resetFilter.addEventListener('click',()=>{
+        filterMonsterName.value = "";
+        filterLevelMin.value = "";
+        filterLevelMax.value = "";
+        activeFilters = {};
+        hideFilterModal();
+        performSearchListing();
+    });
+
+    if(filterForm) filterForm.addEventListener('submit', e=>{
+        e.preventDefault();
+        activeFilters.monsterName = filterMonsterName.value.trim().toLowerCase();
+        activeFilters.minLevel = Number(filterLevelMin.value) || null;
+        activeFilters.maxLevel = Number(filterLevelMax.value) || null;
+        hideFilterModal();
+        performSearchListing();
+    });
+
+    function matchesFilters(locationData) {
+        if(activeFilters.monsterName) {
+            let found = false;
+            if(locationData.monsters)
+                for(let mon of locationData.monsters)
+                    if(mon.name.toLowerCase().includes(activeFilters.monsterName))
+                        found=true;
+            if(!found) return false;
+        }
+        if(activeFilters.minLevel!==undefined && activeFilters.minLevel!==null && activeFilters.minLevel!=="") {
+            let found = false;
+            if(locationData.monsters)
+                for(let mon of locationData.monsters)
+                    if(mon.level>=activeFilters.minLevel)
+                        found=true;
+            if(!found) return false;
+        }
+        if(activeFilters.maxLevel!==undefined && activeFilters.maxLevel!==null && activeFilters.maxLevel!=="") {
+            let found = false;
+            if(locationData.monsters)
+                for(let mon of locationData.monsters)
+                    if(mon.level<=activeFilters.maxLevel)
+                        found=true;
+            if(!found) return false;
+        }
+        return true;
+    }
+
+    // THE MAIN SEARCH LISTING RENDER FUNCTION (make sure it's defined in this scope!)
+    function performSearchListing() {
+        const searchTerm = searchInput.value.trim().toLowerCase();
+        activeSearchTerm = searchTerm;
+        searchResultsList.innerHTML = '';
+        searchResultsEmpty.classList.add('hidden');
+        searchResultsCount.classList.add('hidden');
+
+        if (
+            searchTerm === "" &&
+            (!activeFilters.monsterName || activeFilters.monsterName === "") &&
+            (!activeFilters.minLevel || activeFilters.minLevel === null) &&
+            (!activeFilters.maxLevel || activeFilters.maxLevel === null)
+        ) {
+            searchResultsSection.classList.add('hidden');
+            return;
+        }
+        let matches = [];
+        for (const [id, locationData] of Object.entries(locationsData)) {
+            let isMatch = false;
+            // Text search (location or monster)
+            if (searchTerm && locationData.name.toLowerCase().includes(searchTerm)) isMatch = true;
+            // Monster name or level in search
+            if (!isMatch && searchTerm && locationData.monsters) {
+                for (const monster of locationData.monsters) {
+                    if (monster.name.toLowerCase().includes(searchTerm) || String(monster.level)===searchTerm) {
+                        isMatch = true;
+                        break;
+                    }
+                }
+            }
+            // If not found by search, skip
+            if (searchTerm && !isMatch) continue;
+            // Now apply the filter modal settings
+            if (!matchesFilters(locationData)) continue;
+            matches.push({id,data:locationData});
+        }
+
+        if (matches.length > 0) {
+            searchResultsCount.textContent = matches.length + " match" + (matches.length!==1 ? "es":"");
+            searchResultsCount.classList.remove('hidden');
+        }
+
+        // Keyboard navigation support
+        let currentIndex = -1;
+        function setActive(idx) {
+            const cards = document.querySelectorAll('.result-card');
+            cards.forEach((card,i)=>card.classList.toggle('selected',i===idx));
+            if(idx !== -1 && cards[idx]) cards[idx].focus();
+        }
+        searchInput.onkeydown = (e) => {
+            const N = matches.length;
+            if(!N) return;
+            if (e.key === "ArrowDown") {
+                e.preventDefault();
+                currentIndex = (currentIndex + 1) % N;
+                setActive(currentIndex);
+            } else if (e.key === "ArrowUp") {
+                e.preventDefault();
+                currentIndex = (currentIndex - 1 + N) % N;
+                setActive(currentIndex);
+            } else if (e.key === "Enter" && currentIndex !== -1) {
+                document.querySelectorAll('.result-card')[currentIndex].click();
+            } else {
+                currentIndex = -1;
+                setActive(-1);
+            }
+        };
+
+        if (matches.length === 0) {
+            searchResultsEmpty.classList.remove('hidden');
+        } else {
+            matches.forEach(({id, data}, idx) => {
+                const li = document.createElement('li');
+                li.tabIndex = 0;
+                li.className = "result-card cursor-pointer px-5 py-5 fade-in bg-wlDarker rounded-2xl border border-wlBlue shadow-md hover:shadow-lg transition group relative flex items-center results-fade-in focus:outline-none";
+                li.setAttribute('role','button');
+                li.setAttribute('aria-label',`View details of ${data.name}`);
+                // MAP THUMBNAIL preview:
+                li.innerHTML = `
+                    <img src="${data.mapImage}" alt="Map preview of ${data.name}" class="result-thumbnail mr-5" loading="lazy">
+                    <div class="flex-1">
+                      <div class="absolute top-4 right-6 flex items-center gap-2">
+                        <span class="inline-flex items-center gap-1.5 text-xs font-medium bg-wlGreen/20 text-wlGreen px-2 rounded-full shadow">
+                          <i class="fas fa-map-marker-alt"></i>
+                          ${data.name}
+                        </span>
+                        <span class="search-badge bg-wlBlue/10 text-wlBlue">
+                          ${data.monsters.length} <i class="fas fa-paw ml-1"></i>
+                        </span>
+                        <span class="search-badge bg-wlPurple/10 text-wlPurple">
+                          ${data.npcs.length} <i class="fas fa-user-friends ml-1"></i>
+                        </span>
+                      </div>
+                      <div class="font-bold text-xl text-wlLight group-hover:text-wlBlue mb-1 pr-28">
+                        <i class="fas fa-map mr-2"></i>${data.name}
+                      </div>
+                      <div class="grid grid-cols-1 gap-1 sm:grid-cols-2">
+                        <div class="mb-1">
+                          <span class="text-wlLight font-medium mr-2"><i class="fas fa-paw mr-1"></i>Monsters:</span>
+                          <span class="text-wlLight/70">${data.monsters.map(m=>`${m.name}<span class='text-wlYellow/70 text-xs'> (Lv.${m.level})</span>`).join(", ") || "None"}</span>
+                        </div>
+                        <div>
+                          <span class="text-wlLight font-medium mr-2"><i class="fas fa-user-friends mr-1"></i>NPCs:</span>
+                          <span class="text-wlLight/70">${data.npcs.join(', ') || "None"}</span>
+                        </div>
+                      </div>
+                    </div>
+                  `;
+                li.addEventListener('click', () => {
+                    displayLocationDetails(data);
+                });
+                li.addEventListener('keydown',(e)=>{
+                    if(e.key==='Enter' || e.key===' ') {
+                        displayLocationDetails(data);
+                    }
+                });
+                searchResultsList.appendChild(li);
+
+                // Animation delay for cascading effect
+                setTimeout(()=>li.classList.add('results-fade-in'), 40*idx);
+            });
+        }
+        searchResultsSection.classList.remove('hidden');
+        searchResultsSection.scrollIntoView({behavior: "smooth", block: "center"});
+    }
+
+    // Bind search (and also ENTER on input)
+    if (searchButton && searchInput) {
+        searchButton.addEventListener('click', performSearchListing);
+        searchInput.addEventListener('keypress', (event) => {
+            if (event.key === 'Enter') {
+                performSearchListing();
+            }
+        });
+    }
+
+    // Map marker click logic unchanged
+    mapMarkers.forEach(marker => {
+        marker.addEventListener('click', () => {
+            const locationId = marker.dataset.locationId;
+            const data = locationsData[locationId];
+            if (data) {
+                displayLocationDetails(data);
+            }
+        });
+    });
+
+    // Ensure result list and detail logic remains as styled before...
+    function displayLocationDetails(data) {
+        locationNameEl.textContent = data.name;
+        locationMapImageEl.src = data.mapImage;
+        locationMapImageEl.alt = `${data.name} Map Layout`;
+        locationMonstersListEl.innerHTML = '';
+        if (data.monsters && data.monsters.length > 0) {
+            data.monsters.forEach(monster => {
+                const li = document.createElement('li');
+                li.textContent = `${monster.name} (Lv. ${monster.level})`;
+                locationMonstersListEl.appendChild(li);
+            });
+        } else {
+            locationMonstersListEl.innerHTML = '<li>No notable monsters in this area.</li>';
+        }
+        locationNpcsListEl.innerHTML = '';
+        if (data.npcs && data.npcs.length > 0) {
+            data.npcs.forEach(npc => {
+                const li = document.createElement('li');
+                li.textContent = npc;
+                locationNpcsListEl.appendChild(li);
+            });
+        } else {
+            locationNpcsListEl.innerHTML = '<li>No NPCs found in this area.</li>';
+        }
+        locationDetailSection.classList.remove('hidden');
+        locationDetailSection.scrollIntoView({behavior: 'smooth', block: 'start'});
+        // Optionally hide the results list here if you want.
+        // searchResultsSection.classList.add('hidden');
+    }
+
+    if (closeLocationDetailBtn) {
+        closeLocationDetailBtn.addEventListener('click', () => {
+            locationDetailSection.classList.add('hidden');
+        });
+    }
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,1884 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wonderland Online - Items Database</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        wlBlue: '#3b82f6',
+                        wlPurple: '#8b5cf6',
+                        wlGreen: '#10b981',
+                        wlRed: '#ef4444',
+                        wlYellow: '#f59e0b',
+                        wlDark: '#1e293b',
+                        wlDarker: '#0f172a',
+                        wlLight: '#f8fafc',
+                    },
+                    animation: {
+                        'float': 'float 6s ease-in-out infinite',
+                        'float-fast': 'float 4s ease-in-out infinite',
+                        'pulse-slow': 'pulse 8s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                    },
+                    keyframes: {
+                        float: {
+                            '0%, 100%': { transform: 'translateY(0)' },
+                            '50%': { transform: 'translateY(-10px)' },
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+        
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: #0f172a;
+            background-image: 
+                radial-gradient(at 20% 30%, rgba(59, 130, 246, 0.15) 0px, transparent 50%),
+                radial-gradient(at 80% 0%, rgba(139, 92, 246, 0.15) 0px, transparent 50%),
+                radial-gradient(at 0% 50%, rgba(239, 68, 68, 0.1) 0px, transparent 50%);
+            min-height: 100vh;
+            color: #f8fafc;
+        }
+        
+        .card-hover {
+            transition: all 0.3s ease;
+            transform-style: preserve-3d;
+        }
+        
+        .card-hover:hover {
+            transform: translateY(-5px) scale(1.02) rotateX(1deg);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.2), 0 10px 10px -5px rgba(0, 0, 0, 0.1);
+        }
+        
+        .search-input:focus {
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.5);
+        }
+        
+        .nav-link {
+            position: relative;
+        }
+        
+        .nav-link::after {
+            content: '';
+            position: absolute;
+            width: 0;
+            height: 2px;
+            bottom: 0;
+            left: 0;
+            background-color: currentColor;
+            transition: width 0.3s ease;
+        }
+        
+        .nav-link:hover::after {
+            width: 100%;
+        }
+        
+        .glow {
+            text-shadow: 0 0 10px rgba(139, 92, 246, 0.7);
+        }
+        
+        .category-icon {
+            transition: all 0.3s ease;
+            transform-style: preserve-3d;
+        }
+        
+        .category-card:hover .category-icon {
+            transform: scale(1.2) rotateY(10deg);
+        }
+        
+        .gradient-text {
+            background-clip: text;
+            -webkit-background-clip: text;
+            color: transparent;
+        }
+        
+        .blur-bg {
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+        }
+        
+        .floating-island {
+            animation: float 6s ease-in-out infinite;
+        }
+        
+        .floating-island:nth-child(2) {
+            animation-delay: 1s;
+        }
+        
+        .floating-island:nth-child(3) {
+            animation-delay: 2s;
+        }
+        
+        .tooltip {
+            position: relative;
+        }
+        
+        .tooltip:hover .tooltip-text {
+            visibility: visible;
+            opacity: 1;
+            transform: translateY(0);
+        }
+        
+        .tooltip-text {
+            visibility: hidden;
+            opacity: 0;
+            position: absolute;
+            z-index: 10;
+            bottom: 125%;
+            left: 50%;
+            transform: translateX(-50%) translateY(10px);
+            background-color: #1e293b;
+            color: white;
+            text-align: center;
+            padding: 5px 10px;
+            border-radius: 6px;
+            transition: all 0.3s ease;
+            width: max-content;
+            max-width: 200px;
+            font-size: 0.8rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+        
+        .tooltip-text::after {
+            content: "";
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            margin-left: -5px;
+            border-width: 5px;
+            border-style: solid;
+            border-color: #1e293b transparent transparent transparent;
+        }
+        
+        .fade-in {
+            animation: fadeIn 0.5s ease-in forwards;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .sidebar {
+            transition: transform 0.3s ease;
+        }
+        
+        .sidebar-hidden {
+            transform: translateX(100%);
+        }
+        
+        .sidebar-visible {
+            transform: translateX(0);
+        }
+        
+        .dark-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 40;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+        
+        .dark-overlay-visible {
+            opacity: 1;
+            pointer-events: auto;
+        }
+        
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+        }
+        
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+        
+        /* Table styles */
+        .table-container {
+            overflow-x: auto;
+        }
+        
+        .table {
+            min-width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+        }
+        
+        .table th {
+            position: sticky;
+            top: 0;
+            background-color: #1e293b;
+            z-index: 10;
+            cursor: pointer;
+            user-select: none;
+        }
+        
+        .table th:hover {
+            background-color: rgba(59, 130, 246, 0.2);
+        }
+        
+        .table th.sorted-asc::after {
+            content: " ↑";
+            font-size: 0.8em;
+        }
+        
+        .table th.sorted-desc::after {
+            content: " ↓";
+            font-size: 0.8em;
+        }
+        
+        .table tr:hover td {
+            background-color: rgba(59, 130, 246, 0.1);
+        }
+        
+        .table td, .table th {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        
+        .table th {
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 0.75rem;
+            letter-spacing: 0.5px;
+            color: rgba(255, 255, 255, 0.7);
+        }
+        
+        .rarity-common {
+            color: #ffffff;
+        }
+        
+        .rarity-uncommon {
+            color: #10b981;
+        }
+        
+        .rarity-rare {
+            color: #3b82f6;
+        }
+        
+        .rarity-epic {
+            color: #8b5cf6;
+        }
+        
+        .rarity-legendary {
+            color: #f59e0b;
+        }
+        
+        .item-type-icon {
+            width: 24px;
+            height: 24px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 8px;
+            border-radius: 4px;
+        }
+        
+        .weapon {
+            background-color: rgba(239, 68, 68, 0.2);
+            color: #ef4444;
+        }
+        
+        .armor {
+            background-color: rgba(59, 130, 246, 0.2);
+            color: #3b82f6;
+        }
+        
+        .consumable {
+            background-color: rgba(16, 185, 129, 0.2);
+            color: #10b981;
+        }
+        
+        .material {
+            background-color: rgba(139, 92, 246, 0.2);
+            color: #8b5cf6;
+        }
+        
+        .quest {
+            background-color: rgba(245, 158, 11, 0.2);
+            color: #f59e0b;
+        }
+        
+        .pagination .active {
+            background-color: #3b82f6;
+            color: white;
+        }
+        
+        .filter-dropdown {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease-out;
+        }
+        
+        .filter-dropdown.open {
+            max-height: 500px;
+        }
+        
+        .item-card {
+            transition: all 0.3s ease;
+            transform-style: preserve-3d;
+        }
+        
+        .item-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.2);
+        }
+        
+        /* Item preview tooltip */
+        .item-preview {
+            position: absolute;
+            z-index: 100;
+            width: 200px;
+            background-color: #1e293b;
+            border-radius: 8px;
+            padding: 12px;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.2);
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.2s ease;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .item-preview.visible {
+            opacity: 1;
+        }
+        
+        .item-preview img {
+            width: 100%;
+            height: auto;
+            border-radius: 4px;
+            margin-bottom: 8px;
+        }
+        
+        .item-preview h4 {
+            font-size: 0.9rem;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+        
+        .item-preview .rarity {
+            font-size: 0.8rem;
+            margin-bottom: 4px;
+        }
+        
+        .item-preview .base {
+            font-size: 0.8rem;
+            color: rgba(255, 255, 255, 0.7);
+        }
+        
+        /* Loading spinner */
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+            border-top-color: #3b82f6;
+            animation: spin 1s ease-in-out infinite;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body class="text-wlLight">
+    <!-- Dark overlay for mobile menu -->
+    <div id="darkOverlay" class="dark-overlay"></div>
+    
+    <!-- Mobile sidebar -->
+    <div id="mobileSidebar" class="sidebar sidebar-hidden fixed inset-y-0 right-0 w-64 bg-wlDarker z-50 shadow-2xl p-4 overflow-y-auto">
+        <div class="flex justify-between items-center mb-8">
+            <div class="w-10 h-10 rounded-full bg-gradient-to-br from-wlPurple to-wlBlue flex items-center justify-center">
+                <i class="fas fa-dragon text-xl text-white"></i>
+            </div>
+            <button id="closeSidebar" class="text-wlLight hover:text-wlRed">
+                <i class="fas fa-times text-xl"></i>
+            </button>
+        </div>
+        <nav class="space-y-4">
+            <a href="#" class="block px-4 py-2 rounded-md font-medium hover:bg-wlDark hover:bg-opacity-50 transition">Home</a>
+            <a href="#" class="block px-4 py-2 rounded-md font-medium bg-wlDark bg-opacity-50 text-wlBlue transition">Items</a>
+            <a href="#" class="block px-4 py-2 rounded-md font-medium hover:bg-wlDark hover:bg-opacity-50 transition">Quests</a>
+            <a href="#" class="block px-4 py-2 rounded-md font-medium hover:bg-wlDark hover:bg-opacity-50 transition">Monsters</a>
+            <a href="#" class="block px-4 py-2 rounded-md font-medium hover:bg-wlDark hover:bg-opacity-50 transition">Guides</a>
+            <a href="#" class="block px-4 py-2 rounded-md font-medium hover:bg-wlDark hover:bg-opacity-50 transition">Collections</a>
+            <a href="#" class="block px-4 py-2 rounded-md font-medium hover:bg-wlDark hover:bg-opacity-50 transition">Shops</a>
+            <a href="#" class="block px-4 py-2 rounded-md font-medium hover:bg-wlDark hover:bg-opacity-50 transition">Recycles</a>
+        </nav>
+        <div class="mt-8 pt-4 border-t border-wlLight border-opacity-20">
+            <h4 class="font-medium mb-4">Quick Links</h4>
+            <div class="space-y-2">
+                <a href="#" class="block text-sm text-wlLight text-opacity-70 hover:text-wlBlue transition">Updates</a>
+                <a href="#" class="block text-sm text-wlLight text-opacity-70 hover:text-wlBlue transition">Patch Notes</a>
+                <a href="#" class="block text-sm text-wlLight text-opacity-70 hover:text-wlBlue transition">Community</a>
+                <a href="#" class="block text-sm text-wlLight text-opacity-70 hover:text-wlBlue transition">API</a>
+            </div>
+        </div>
+    </div>
+
+    <div class="min-h-screen flex flex-col">
+        <!-- Header -->
+        <header class="bg-wlDark bg-opacity-90 blur-bg shadow-lg sticky top-0 z-50">
+            <div class="container mx-auto px-4 py-4">
+                <div class="flex justify-between items-center">
+                    <div class="flex items-center space-x-4">
+                        <div class="w-10 h-10 rounded-full bg-gradient-to-br from-wlPurple to-wlBlue flex items-center justify-center">
+                            <i class="fas fa-dragon text-xl text-white"></i>
+                        </div>
+                        <h1 class="text-2xl font-bold bg-gradient-to-r from-wlBlue to-wlPurple gradient-text glow">
+                            Wonderland Online DB
+                        </h1>
+                    </div>
+                    <div class="hidden md:flex space-x-6 items-center">
+                        <a href="#" class="nav-link px-3 py-2 text-sm font-medium">Home</a>
+                        <a href="#" class="nav-link px-3 py-2 text-sm font-medium text-wlBlue">Items</a>
+                        <a href="#" class="nav-link px-3 py-2 text-sm font-medium">Quests</a>
+                        <a href="#" class="nav-link px-3 py-2 text-sm font-medium">Monsters</a>
+                        <button class="ml-4 px-4 py-2 bg-gradient-to-r from-wlBlue to-wlPurple text-white rounded-md hover:opacity-90 transition">
+                            Login
+                        </button>
+                    </div>
+                    <div class="md:hidden">
+                        <button id="openSidebar" class="text-wlLight focus:outline-none">
+                            <i class="fas fa-bars text-2xl"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="flex-grow container mx-auto px-4 py-8">
+            <!-- Page Header -->
+            <section class="mb-8">
+                <div class="flex flex-col md:flex-row justify-between items-start md:items-end mb-6">
+                    <div>
+                        <h2 class="text-3xl font-bold mb-2 flex items-center">
+                            <i class="fas fa-cube mr-3 text-wlBlue"></i>
+                            Items Database
+                        </h2>
+                        <p class="text-wlLight text-opacity-70">
+                            Browse through our comprehensive database of in-game items
+                        </p>
+                    </div>
+                    <div class="mt-4 md:mt-0">
+                        <button id="toggleFilters" class="px-4 py-2 bg-wlDark border border-wlLight border-opacity-20 rounded-md flex items-center space-x-2 hover:bg-wlDarker transition">
+                            <i class="fas fa-sliders-h"></i>
+                            <span>Filters</span>
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Filters Dropdown -->
+                <div id="filtersDropdown" class="filter-dropdown mb-6 bg-wlDark bg-opacity-70 rounded-lg overflow-hidden">
+                    <div class="p-4">
+                        <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+                            <!-- Search -->
+                            <div>
+                                <label class="block text-sm font-medium mb-2">Search</label>
+                                <div class="relative">
+                                    <input type="text" id="itemSearch" placeholder="Item name..." 
+                                           class="w-full px-4 py-2 bg-wlDarker border border-wlLight border-opacity-20 rounded-md focus:outline-none focus:border-wlBlue">
+                                    <button id="searchButton" class="absolute right-3 top-2 text-wlLight text-opacity-70 hover:text-wlBlue">
+                                        <i class="fas fa-search"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <!-- Item Type -->
+                            <div>
+                                <label class="block text-sm font-medium mb-2">Item Type</label>
+                                <select id="itemTypeFilter" class="w-full px-4 py-2 bg-wlDarker border border-wlLight border-opacity-20 rounded-md focus:outline-none focus:border-wlBlue">
+                                    <option value="">All Types</option>
+                                    <option value="weapon">Weapon</option>
+                                    <option value="armor">Armor</option>
+                                    <option value="consumable">Consumable</option>
+                                    <option value="material">Material</option>
+                                    <option value="quest">Quest Item</option>
+                                </select>
+                            </div>
+                            
+                            <!-- Rarity -->
+                            <div>
+                                <label class="block text-sm font-medium mb-2">Rarity</label>
+                                <select id="rarityFilter" class="w-full px-4 py-2 bg-wlDarker border border-wlLight border-opacity-20 rounded-md focus:outline-none focus:border-wlBlue">
+                                    <option value="">All Rarities</option>
+                                    <option value="common">Common</option>
+                                    <option value="uncommon">Uncommon</option>
+                                    <option value="rare">Rare</option>
+                                    <option value="epic">Epic</option>
+                                    <option value="legendary">Legendary</option>
+                                </select>
+                            </div>
+                            
+                            <!-- Level Requirement -->
+                            <div>
+                                <label class="block text-sm font-medium mb-2">Level Requirement</label>
+                                <div class="flex items-center space-x-2">
+                                    <input type="number" id="minLevel" placeholder="Min" 
+                                           class="w-1/2 px-4 py-2 bg-wlDarker border border-wlLight border-opacity-20 rounded-md focus:outline-none focus:border-wlBlue">
+                                    <span>to</span>
+                                    <input type="number" id="maxLevel" placeholder="Max" 
+                                           class="w-1/2 px-4 py-2 bg-wlDarker border border-wlLight border-opacity-20 rounded-md focus:outline-none focus:border-wlBlue">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mt-4 flex justify-end space-x-3">
+                            <button id="resetFilters" class="px-4 py-2 text-sm text-wlLight text-opacity-70 hover:text-wlBlue transition">
+                                Reset
+                            </button>
+                            <button id="applyFilters" class="px-4 py-2 bg-gradient-to-r from-wlBlue to-wlPurple text-white rounded-md hover:opacity-90 transition text-sm">
+                                Apply Filters
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- View Toggle -->
+                <div class="flex justify-between items-center mb-4">
+                    <div class="text-sm text-wlLight text-opacity-70">
+                        <span id="showingCount">Loading...</span> items
+                    </div>
+                    <div class="flex space-x-2">
+                        <button id="tableViewBtn" class="px-3 py-1 bg-wlBlue text-white rounded-md text-sm">
+                            <i class="fas fa-table mr-1"></i> Table
+                        </button>
+                        <button id="gridViewBtn" class="px-3 py-1 bg-wlDark border border-wlLight border-opacity-20 rounded-md text-sm hover:bg-wlDarker transition">
+                            <i class="fas fa-th-large mr-1"></i> Grid
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Loading Indicator -->
+            <div id="loadingIndicator" class="flex justify-center items-center py-12">
+                <div class="spinner"></div>
+            </div>
+
+            <!-- Table View -->
+            <section id="tableView" class="mb-8 hidden">
+                <div class="bg-wlDark bg-opacity-70 rounded-xl overflow-hidden">
+                    <div class="table-container max-h-[600px] overflow-y-auto">
+                        <table class="table w-full">
+                            <thead>
+                                <tr>
+                                    <th class="w-10"></th>
+                                    <th data-sort="name">Item</th>
+                                    <th data-sort="type">Type</th>
+                                    <th data-sort="rarity">Rank</th>
+                                    <th data-sort="level">Level</th>
+                                    <th data-sort="base">Base</th>
+                                    <th data-sort="value">Value</th>
+                                    <th data-sort="source">Source</th>
+                                    <th class="text-right">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="itemsTableBody">
+                                <!-- Items will be populated here by JavaScript -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                
+                <!-- Pagination -->
+                <div class="mt-6 flex flex-col md:flex-row items-center justify-between">
+                    <div class="mb-4 md:mb-0">
+                        <span class="text-sm text-wlLight text-opacity-70">Items per page:</span>
+                        <select id="itemsPerPage" class="ml-2 px-2 py-1 bg-wlDarker border border-wlLight border-opacity-20 rounded-md text-sm focus:outline-none">
+                            <option>10</option>
+                            <option selected>20</option>
+                            <option>50</option>
+                            <option>100</option>
+                        </select>
+                    </div>
+                    <div class="flex space-x-1" id="pagination">
+                        <!-- Pagination will be generated here -->
+                    </div>
+                </div>
+            </section>
+
+            <!-- Grid View (Hidden by default) -->
+            <section id="gridView" class="hidden mb-8">
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6" id="itemsGrid">
+                    <!-- Items will be populated here by JavaScript -->
+                </div>
+                
+                <!-- Pagination -->
+                <div class="mt-6 flex flex-col md:flex-row items-center justify-between">
+                    <div class="mb-4 md:mb-0">
+                        <span class="text-sm text-wlLight text-opacity-70">Items per page:</span>
+                        <select id="itemsPerPageGrid" class="ml-2 px-2 py-1 bg-wlDarker border border-wlLight border-opacity-20 rounded-md text-sm focus:outline-none">
+                            <option>12</option>
+                            <option selected>24</option>
+                            <option>48</option>
+                            <option>96</option>
+                        </select>
+                    </div>
+                    <div class="flex space-x-1" id="paginationGrid">
+                        <!-- Pagination will be generated here -->
+                    </div>
+                </div>
+            </section>
+
+            <!-- Quick Stats -->
+            <section class="bg-wlDark bg-opacity-70 rounded-xl p-6 mb-8 hidden" id="quickStats">
+                <h3 class="text-xl font-semibold mb-4">Items Statistics</h3>
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-6">
+                    <div class="text-center">
+                        <div class="text-3xl font-bold mb-2 text-wlBlue" id="totalItems">0</div>
+                        <div class="text-sm text-wlLight text-opacity-70">Total Items</div>
+                    </div>
+                    <div class="text-center">
+                        <div class="text-3xl font-bold mb-2 text-wlRed" id="totalWeapons">0</div>
+                        <div class="text-sm text-wlLight text-opacity-70">Weapons</div>
+                    </div>
+                    <div class="text-center">
+                        <div class="text-3xl font-bold mb-2 text-wlPurple" id="totalArmor">0</div>
+                        <div class="text-sm text-wlLight text-opacity-70">Armor Pieces</div>
+                    </div>
+                    <div class="text-center">
+                        <div class="text-3xl font-bold mb-2 text-wlGreen" id="totalConsumables">0</div>
+                        <div class="text-sm text-wlLight text-opacity-70">Consumables</div>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <!-- Footer -->
+        <footer class="bg-wlDark bg-opacity-90 blur-bg py-12">
+            <div class="container mx-auto px-4">
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
+                    <div>
+                        <div class="flex items-center space-x-3 mb-4">
+                            <div class="w-10 h-10 rounded-full bg-gradient-to-br from-wlPurple to-wlBlue flex items-center justify-center">
+                                <i class="fas fa-dragon text-xl text-white"></i>
+                            </div>
+                            <h4 class="text-lg font-semibold">Wonderland DB</h4>
+                        </div>
+                        <p class="text-sm text-wlLight text-opacity-70 mb-4">
+                            The most comprehensive database for Wonderland Online. Regularly updated with the latest game content.
+                        </p>
+                        <div class="flex space-x-4">
+                            <a href="#" class="w-8 h-8 rounded-full bg-wlDark bg-opacity-70 border border-wlLight border-opacity-20 flex items-center justify-center hover:bg-wlBlue transition">
+                                <i class="fab fa-discord text-sm text-wlLight"></i>
+                            </a>
+                            <a href="#" class="w-8 h-8 rounded-full bg-wlDark bg-opacity-70 border border-wlLight border-opacity-20 flex items-center justify-center hover:bg-blue-400 transition">
+                                <i class="fab fa-twitter text-sm text-wlLight"></i>
+                            </a>
+                            <a href="#" class="w-8 h-8 rounded-full bg-wlDark bg-opacity-70 border border-wlLight border-opacity-20 flex items-center justify-center hover:bg-pink-500 transition">
+                                <i class="fab fa-youtube text-sm text-wlLight"></i>
+                            </a>
+                        </div>
+                    </div>
+                    <div>
+                        <h4 class="text-lg font-semibold mb-4 text-wlLight">Database</h4>
+                        <ul class="space-y-2">
+                            <li><a href="#" class="text-sm text-wlLight text-opacity-70 hover:text-wlBlue transition">Items</a></li>
+                            <li><a href="#" class="text-sm text-wlLight text-opacity-70 hover:text-wlBlue transition">Weapons</a></li>
+                            <li><a href="#" class="text-sm text-wlLight text-opacity-70 hover:text-wlBlue transition">Armor</a></li>
+                            <li><a href="#" class="text-sm text-wlLight text-opacity-70 hover:text-wlBlue transition">Consumables</a></li>
+                        </ul>
+                    </div>
+                    <div>
+                        <h4 class="text-lg font-semibold mb-4 text-wlLight">Resources</h4>
+                        <ul class="space-y-2">
+                            <li><a href="#" class="text-sm text-wlLight text-opacity-70 hover:text-wlBlue transition">Item Sets</a></li>
+                            <li><a href="#" class="text-sm text-wlLight text-opacity-70 hover:text-wlBlue transition">Crafting Recipes</a></li>
+                            <li><a href="#" class="text-sm text-wlLight text-opacity-70 hover:text-wlBlue transition">Drop Rates</a></li>
+                            <li><a href="#" class="text-sm text-wlLight text-opacity-70 hover:text-wlBlue transition">Item Comparison</a></li>
+                        </ul>
+                    </div>
+                    <div>
+                        <h4 class="text-lg font-semibold mb-4 text-wlLight">Newsletter</h4>
+                        <p class="text-sm text-wlLight text-opacity-70 mb-4">
+                            Get updates on new items and database features.
+                        </p>
+                        <div class="flex">
+                            <input type="email" placeholder="Your email" class="flex-grow px-4 py-2 bg-wlDark border border-wlLight border-opacity-20 text-sm rounded-l focus:outline-none focus:border-wlBlue">
+                            <button class="px-4 py-2 bg-gradient-to-r from-wlBlue to-wlPurple text-white text-sm rounded-r hover:opacity-90 transition">
+                                Subscribe
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <div class="pt-6 border-t border-wlLight border-opacity-20">
+                    <p class="text-sm text-center text-wlLight text-opacity-70">
+                        © 2023 Wonderland Online DB. All game content and materials are trademarks of their respective owners.
+                    </p>
+                </div>
+            </div>
+        </footer>
+    </div>
+
+    <!-- Item Detail Modal -->
+    <div id="itemModal" class="fixed inset-0 z-50 flex items-center justify-center hidden">
+        <div class="absolute inset-0 bg-black bg-opacity-70"></div>
+        <div class="relative bg-wlDarker rounded-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+            <button id="closeModal" class="absolute top-4 right-4 text-wlLight hover:text-wlRed text-xl">
+                <i class="fas fa-times"></i>
+            </button>
+            <div class="p-6">
+                <!-- Modal content will be populated by JavaScript -->
+                <div id="modalContent"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Item Preview Tooltip -->
+    <div id="itemPreview" class="item-preview">
+        <img src="" alt="" id="previewImage">
+        <h4 id="previewName"></h4>
+        <div class="rarity" id="previewRarity"></div>
+        <div class="base" id="previewBase"></div>
+    </div>
+
+    <script>
+        // Database connection configuration
+        const dbConfig = {
+            host: 'localhost',
+            user: 'wonderland_user',
+            password: 'securepassword',
+            database: 'wonderland_db'
+        };
+
+        // Current state of the application
+        let currentState = {
+        items: [],
+        filteredItems: [],
+        currentPage: 1,
+        itemsPerPage: 20,
+        sortColumn: 'name',
+        sortDirection: 'asc',
+        filters: {
+            search: '',
+            type: '',
+            rarity: '',
+            minLevel: 0,
+            maxLevel: 100
+        }
+    };
+    window.currentState = currentState;
+
+        // Mobile sidebar toggle
+        const openSidebar = document.getElementById('openSidebar');
+        const closeSidebar = document.getElementById('closeSidebar');
+        const mobileSidebar = document.getElementById('mobileSidebar');
+        const darkOverlay = document.getElementById('darkOverlay');
+        
+        openSidebar.addEventListener('click', () => {
+            mobileSidebar.classList.remove('sidebar-hidden');
+            mobileSidebar.classList.add('sidebar-visible');
+            darkOverlay.classList.add('dark-overlay-visible');
+        });
+        
+        closeSidebar.addEventListener('click', () => {
+            mobileSidebar.classList.remove('sidebar-visible');
+            mobileSidebar.classList.add('sidebar-hidden');
+            darkOverlay.classList.remove('dark-overlay-visible');
+        });
+        
+        darkOverlay.addEventListener('click', () => {
+            mobileSidebar.classList.remove('sidebar-visible');
+            mobileSidebar.classList.add('sidebar-hidden');
+            darkOverlay.classList.remove('dark-overlay-visible');
+        });
+        
+        // Toggle filters
+        const toggleFilters = document.getElementById('toggleFilters');
+        const filtersDropdown = document.getElementById('filtersDropdown');
+        
+        toggleFilters.addEventListener('click', () => {
+            filtersDropdown.classList.toggle('open');
+        });
+        
+        // View toggle
+        const tableViewBtn = document.getElementById('tableViewBtn');
+        const gridViewBtn = document.getElementById('gridViewBtn');
+        const tableView = document.getElementById('tableView');
+        const gridView = document.getElementById('gridView');
+        
+        tableViewBtn.addEventListener('click', () => {
+            tableView.classList.remove('hidden');
+            gridView.classList.add('hidden');
+            tableViewBtn.classList.add('bg-wlBlue', 'text-white');
+            tableViewBtn.classList.remove('bg-wlDark', 'border');
+            gridViewBtn.classList.add('bg-wlDark', 'border');
+            gridViewBtn.classList.remove('bg-wlBlue', 'text-white');
+        });
+        
+        gridViewBtn.addEventListener('click', () => {
+            gridView.classList.remove('hidden');
+            tableView.classList.add('hidden');
+            gridViewBtn.classList.add('bg-wlBlue', 'text-white');
+            gridViewBtn.classList.remove('bg-wlDark', 'border');
+            tableViewBtn.classList.add('bg-wlDark', 'border');
+            tableViewBtn.classList.remove('bg-wlBlue', 'text-white');
+        });
+
+        // Helper functions
+        function capitalizeFirstLetter(string) {
+            return string.charAt(0).toUpperCase() + string.slice(1);
+        }
+        
+        function getTypeIcon(type) {
+            const icons = {
+                weapon: 'fa-sword',
+                armor: 'fa-shield-alt',
+                consumable: 'fa-wine-bottle',
+                material: 'fa-gem',
+                quest: 'fa-scroll'
+            };
+            return icons[type] || 'fa-question';
+        }
+
+        // Sort items
+        function sortItems(items, column, direction) {
+            return [...items].sort((a, b) => {
+                // Special handling for numeric columns
+                if (['level', 'value'].includes(column)) {
+                    return direction === 'asc' ? a[column] - b[column] : b[column] - a[column];
+                }
+                
+                // Default string comparison
+                const valA = String(a[column] || '').toLowerCase();
+                const valB = String(b[column] || '').toLowerCase();
+                
+                if (valA < valB) return direction === 'asc' ? -1 : 1;
+                if (valA > valB) return direction === 'asc' ? 1 : -1;
+                return 0;
+            });
+        }
+
+        // Apply filters to items
+        function applyFilters(items) {
+            const { search, type, rarity, minLevel, maxLevel } = currentState.filters;
+            
+            return items.filter(item => {
+                const matchesSearch = search === '' || 
+                    item.name.toLowerCase().includes(search.toLowerCase()) || 
+                    (item.description && item.description.toLowerCase().includes(search.toLowerCase()));
+                
+                const matchesType = type === '' || item.type === type;
+                const matchesRarity = rarity === '' || item.rarity === rarity;
+                const matchesLevel = item.level >= minLevel && item.level <= maxLevel;
+                
+                return matchesSearch && matchesType && matchesRarity && matchesLevel;
+            });
+        }
+
+        // Get paginated items
+        function getPaginatedItems(items) {
+            const startIndex = (currentState.currentPage - 1) * currentState.itemsPerPage;
+            const endIndex = startIndex + currentState.itemsPerPage;
+            return items.slice(startIndex, endIndex);
+        }
+
+        // Generate pagination buttons
+        function generatePagination(totalItems, itemsPerPage, currentPage, containerId) {
+            const totalPages = Math.ceil(totalItems / itemsPerPage);
+            const paginationContainer = document.getElementById(containerId);
+            paginationContainer.innerHTML = '';
+            
+            if (totalPages <= 1) return;
+            
+            // Previous button
+            const prevButton = document.createElement('button');
+            prevButton.className = `px-3 py-1 bg-wlDark border border-wlLight border-opacity-20 rounded-md text-sm hover:bg-wlDarker transition ${currentPage === 1 ? 'opacity-50 cursor-not-allowed' : ''}`;
+            prevButton.innerHTML = '<i class="fas fa-chevron-left"></i>';
+            prevButton.disabled = currentPage === 1;
+            prevButton.addEventListener('click', () => {
+                if (currentPage > 1) {
+                    currentState.currentPage = currentPage - 1;
+                    renderItems();
+                }
+            });
+            paginationContainer.appendChild(prevButton);
+            
+            // Page buttons
+            const maxVisiblePages = 5;
+            let startPage = Math.max(1, currentPage - Math.floor(maxVisiblePages / 2));
+            let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
+            
+            if (endPage - startPage + 1 < maxVisiblePages) {
+                startPage = Math.max(1, endPage - maxVisiblePages + 1);
+            }
+            
+            if (startPage > 1) {
+                const firstPageButton = document.createElement('button');
+                firstPageButton.className = 'px-3 py-1 bg-wlDark border border-wlLight border-opacity-20 rounded-md text-sm hover:bg-wlDarker transition';
+                firstPageButton.textContent = '1';
+                firstPageButton.addEventListener('click', () => {
+                    currentState.currentPage = 1;
+                    renderItems();
+                });
+                paginationContainer.appendChild(firstPageButton);
+                
+                if (startPage > 2) {
+                    const ellipsis = document.createElement('span');
+                    ellipsis.className = 'px-3 py-1 text-sm';
+                    ellipsis.textContent = '...';
+                    paginationContainer.appendChild(ellipsis);
+                }
+            }
+            
+            for (let i = startPage; i <= endPage; i++) {
+                const pageButton = document.createElement('button');
+                pageButton.className = `px-3 py-1 rounded-md text-sm ${i === currentPage ? 'bg-wlBlue text-white' : 'bg-wlDark border border-wlLight border-opacity-20 hover:bg-wlDarker'}`;
+                pageButton.textContent = i;
+                pageButton.addEventListener('click', () => {
+                    currentState.currentPage = i;
+                    renderItems();
+                });
+                paginationContainer.appendChild(pageButton);
+            }
+            
+            if (endPage < totalPages) {
+                if (endPage < totalPages - 1) {
+                    const ellipsis = document.createElement('span');
+                    ellipsis.className = 'px-3 py-1 text-sm';
+                    ellipsis.textContent = '...';
+                    paginationContainer.appendChild(ellipsis);
+                }
+                
+                const lastPageButton = document.createElement('button');
+                lastPageButton.className = 'px-3 py-1 bg-wlDark border border-wlLight border-opacity-20 rounded-md text-sm hover:bg-wlDarker transition';
+                lastPageButton.textContent = totalPages;
+                lastPageButton.addEventListener('click', () => {
+                    currentState.currentPage = totalPages;
+                    renderItems();
+                });
+                paginationContainer.appendChild(lastPageButton);
+            }
+            
+            // Next button
+            const nextButton = document.createElement('button');
+            nextButton.className = `px-3 py-1 bg-wlDark border border-wlLight border-opacity-20 rounded-md text-sm hover:bg-wlDarker transition ${currentPage === totalPages ? 'opacity-50 cursor-not-allowed' : ''}`;
+            nextButton.innerHTML = '<i class="fas fa-chevron-right"></i>';
+            nextButton.disabled = currentPage === totalPages;
+            nextButton.addEventListener('click', () => {
+                if (currentPage < totalPages) {
+                    currentState.currentPage = currentPage + 1;
+                    renderItems();
+                }
+            });
+            paginationContainer.appendChild(nextButton);
+        }
+
+        // Render items to the table and grid views
+        function renderItems() {
+            const loadingIndicator = document.getElementById('loadingIndicator');
+            const quickStats = document.getElementById('quickStats');
+            const itemsTableBody = document.getElementById('itemsTableBody');
+            const itemsGrid = document.getElementById('itemsGrid');
+            const showingCount = document.getElementById('showingCount');
+            
+            // Show loading indicator
+            loadingIndicator.classList.remove('hidden');
+            tableView.classList.add('hidden');
+            gridView.classList.add('hidden');
+            quickStats.classList.add('hidden');
+            
+            // Simulate database fetch with timeout (in a real app, this would be an actual API call)
+            setTimeout(() => {
+                // Sort and filter items
+                const sortedItems = sortItems(currentState.items, currentState.sortColumn, currentState.sortDirection);
+                currentState.filteredItems = applyFilters(sortedItems);
+                
+                // Get paginated items
+                const paginatedItems = getPaginatedItems(currentState.filteredItems);
+                
+                // Update counts
+                const startItem = (currentState.currentPage - 1) * currentState.itemsPerPage + 1;
+                const endItem = Math.min(startItem + currentState.itemsPerPage - 1, currentState.filteredItems.length);
+                showingCount.textContent = `${startItem}-${endItem} of ${currentState.filteredItems.length}`;
+                
+                // Clear existing items
+                itemsTableBody.innerHTML = '';
+                itemsGrid.innerHTML = '';
+                
+                // Render table view
+                paginatedItems.forEach(item => {
+                    const row = document.createElement('tr');
+                    row.className = 'hover:bg-wlDark hover:bg-opacity-50 transition';
+                    row.innerHTML = `
+                        <td>
+                            <div class="tooltip">
+                                <img src="${item.image}" alt="${item.name}" class="w-10 h-10 rounded-md object-cover">
+                                <div class="tooltip-text">${item.name}</div>
+                            </div>
+                        </td>
+                        <td class="item-name-cell" data-item-id="${item.id}">
+                            <div class="font-medium">${item.name}</div>
+                            <div class="text-xs text-wlLight text-opacity-70">${item.subtype || 'N/A'}</div>
+                        </td>
+                        <td>
+                            <div class="flex items-center">
+                                <span class="item-type-icon ${item.type}">
+                                    <i class="fas ${getTypeIcon(item.type)} text-xs"></i>
+                                </span>
+                                <span>${capitalizeFirstLetter(item.type)}</span>
+                            </div>
+                        </td>
+                        <td><span class="rarity-${item.rarity}">${capitalizeFirstLetter(item.rarity)}</span></td>
+                        <td>${item.level}</td>
+                        <td>${item.base || 'N/A'}</td>
+                        <td>${item.value ? item.value.toLocaleString() + ' G' : 'N/A'}</td>
+                        <td>${item.source || 'N/A'}</td>
+                        <td class="text-right">
+                            <button onclick="openItemModal(${item.id})" class="px-3 py-1 bg-wlDark border border-wlLight border-opacity-20 rounded-md text-sm hover:bg-wlBlue hover:border-wlBlue transition">
+                                Details
+                            </button>
+                        </td>
+                    `;
+                    itemsTableBody.appendChild(row);
+                });
+                
+                // Render grid view
+                paginatedItems.forEach(item => {
+                    const card = document.createElement('div');
+                    card.className = 'bg-wlDark bg-opacity-70 rounded-xl p-4 border border-wlLight border-opacity-20 item-card';
+                    card.innerHTML = `
+                        <div class="flex items-start mb-4">
+                            <img src="${item.image}" alt="${item.name}" class="w-16 h-16 rounded-md object-cover mr-4">
+                            <div>
+                                <h4 class="font-medium">${item.name}</h4>
+                                <div class="text-xs text-wlLight text-opacity-70 mb-1">${item.subtype || 'N/A'}</div>
+                                <div class="flex items-center text-xs">
+                                    <span class="item-type-icon ${item.type} mr-1">
+                                        <i class="fas ${getTypeIcon(item.type)} text-xs"></i>
+                                    </span>
+                                    <span class="mr-2">${capitalizeFirstLetter(item.type)}</span>
+                                    <span class="rarity-${item.rarity}">${capitalizeFirstLetter(item.rarity)}</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-2 gap-2 text-xs mb-4">
+                            <div>
+                                <div class="text-wlLight text-opacity-70">Level</div>
+                                <div>${item.level}</div>
+                            </div>
+                            <div>
+                                <div class="text-wlLight text-opacity-70">Value</div>
+                                <div>${item.value ? item.value.toLocaleString() + ' G' : 'N/A'}</div>
+                            </div>
+                            <div class="col-span-2">
+                                <div class="text-wlLight text-opacity-70">Base</div>
+                                <div class="truncate">${item.base || 'N/A'}</div>
+                            </div>
+                        </div>
+                        <button onclick="openItemModal(${item.id})" class="w-full py-2 bg-wlDark border border-wlLight border-opacity-20 rounded-md text-sm hover:bg-wlBlue hover:border-wlBlue transition">
+                            View Details
+                        </button>
+                    `;
+                    itemsGrid.appendChild(card);
+                });
+                
+                // Generate pagination
+                generatePagination(currentState.filteredItems.length, currentState.itemsPerPage, currentState.currentPage, 'pagination');
+                generatePagination(currentState.filteredItems.length, currentState.itemsPerPage, currentState.currentPage, 'paginationGrid');
+                
+                // Update quick stats
+                updateQuickStats();
+                
+                // Hide loading indicator and show content
+                loadingIndicator.classList.add('hidden');
+                if (tableViewBtn.classList.contains('bg-wlBlue')) {
+                    tableView.classList.remove('hidden');
+                } else {
+                    gridView.classList.remove('hidden');
+                }
+                quickStats.classList.remove('hidden');
+                
+                // Set up item preview hover events
+                setupItemPreviews();
+            }, 500); // Simulate network delay
+        }
+
+        // Update quick stats
+        function updateQuickStats() {
+            const totalItems = document.getElementById('totalItems');
+            const totalWeapons = document.getElementById('totalWeapons');
+            const totalArmor = document.getElementById('totalArmor');
+            const totalConsumables = document.getElementById('totalConsumables');
+            
+            totalItems.textContent = currentState.items.length;
+            totalWeapons.textContent = currentState.items.filter(item => item.type === 'weapon').length;
+            totalArmor.textContent = currentState.items.filter(item => item.type === 'armor').length;
+            totalConsumables.textContent = currentState.items.filter(item => item.type === 'consumable').length;
+        }
+
+        // Set up item preview on hover
+        function setupItemPreviews() {
+            const itemPreview = document.getElementById('itemPreview');
+            const previewImage = document.getElementById('previewImage');
+            const previewName = document.getElementById('previewName');
+            const previewRarity = document.getElementById('previewRarity');
+            const previewBase = document.getElementById('previewBase');
+            
+            // Get all elements that should trigger the preview
+            const itemNameCells = document.querySelectorAll('.item-name-cell');
+            
+            itemNameCells.forEach(cell => {
+                const itemId = parseInt(cell.getAttribute('data-item-id'));
+                const item = currentState.items.find(i => i.id === itemId);
+                
+                if (!item) return;
+                
+                cell.addEventListener('mouseenter', (e) => {
+                    // Position the preview near the cursor
+                    const rect = e.target.getBoundingClientRect();
+                    itemPreview.style.left = `${rect.left + rect.width + 10}px`;
+                    itemPreview.style.top = `${rect.top}px`;
+                    
+                    // Set preview content
+                    previewImage.src = item.image;
+                    previewImage.alt = item.name;
+                    previewName.textContent = item.name;
+                    previewRarity.textContent = capitalizeFirstLetter(item.rarity);
+                    previewRarity.className = `rarity rarity-${item.rarity}`;
+                    previewBase.textContent = item.base || 'Base: N/A';
+                    
+                    // Show preview
+                    itemPreview.classList.add('visible');
+                });
+                
+                cell.addEventListener('mouseleave', () => {
+                    itemPreview.classList.remove('visible');
+                });
+            });
+        }
+
+        // Open item modal
+        function generateRecipeTable(item, recipeFilter = null) {
+    // Example recipes as in source code
+    const allRecipes = [
+        { outputId: 1, name: "Slayer's Forge", ingredients: [11, 19, 2] },
+        { outputId: 2, name: "Phoenix Blend", ingredients: [7, 14] },
+        { outputId: 5, name: "Shadow Craft", ingredients: [7, 11, 3, 12] },
+        { outputId: 4, name: "Potion Making", ingredients: [7, 2, 11, 18, 3] },
+        { outputId: 16, name: "Basic Cobbler", ingredients: [11, 17] },
+        { outputId: 20, name: "Immortal Blend", ingredients: [2, 14, 19, 7, 11] }
+        // ... Extend as needed
+    ];
+
+    // Find recipes for this item (outputId === item.id)
+    let recipes = allRecipes.filter(r => r.outputId === item.id);
+
+    // Get lookup for all items (ingredient and output)
+    const itemList = window.currentState?.items || [];
+    const itemLookup = Object.fromEntries(itemList.map(i => [i.id, i]));
+
+    // Filtering logic
+    if (recipeFilter) {
+        // recipeFilter = { key: "item"|"rank"|"base", value: ... }
+        recipes = recipes.filter(recipe => {
+            // All recipes for this modal have only 1 output (which is 'item')
+            const outputItem = itemLookup[recipe.outputId];
+            if (!outputItem) return false;
+            if (recipeFilter.key === "item") {
+                return outputItem.name === recipeFilter.value;
+            } else if (recipeFilter.key === "rank") {
+                return outputItem.rarity === recipeFilter.value;
+            } else if (recipeFilter.key === "base") {
+                return outputItem.base === recipeFilter.value;
+            }
+            return true;
+        });
+    }
+
+    if (!recipes.length) {
+        return `
+            <div class="mt-6">
+                <h4 class="text-lg font-semibold mb-2">Recipes (0)</h4>
+                <p class="text-wlLight text-opacity-70">No recipes found for this item.</p>
+            </div>
+        `;
+    }
+
+    // Build filter state (unique values) for the clickable filters in this modal
+    const itemsInSection = recipes.map(r => itemLookup[r.outputId]).filter(Boolean);
+    const uniqueItems   = [...new Set(itemsInSection.map(i => i?.name))];
+    const uniqueRanks   = [...new Set(itemsInSection.map(i => i?.rarity))];
+    const uniqueBases   = [...new Set(itemsInSection.map(i => i?.base))];
+
+    // Used so that clicking a filter always operates only in this modal.
+    function filterButtonHtml(key, value, currentFilter) {
+        const isActive = currentFilter?.key === key && currentFilter.value === value;
+        return `<button type="button"
+                class="px-1 underline ${isActive ? 'font-bold text-wlBlue' : 'hover:text-wlBlue'}"
+                data-filter-key="${key}" data-filter-value="${encodeURIComponent(value)}">
+            ${key === "rank" ? capitalizeFirstLetter(value) : value}
+        </button>`;
+    }
+
+    // Table header, now 3 columns. Clicking header rotates filter by that column.
+    const currentFilterKey = recipeFilter && recipeFilter.key;
+    const currentFilterValue = recipeFilter && recipeFilter.value;
+
+    let tableHead = `
+        <tr>
+            <th class="cursor-pointer bg-wlDark" data-filterkey="item">
+                Item${currentFilterKey === "item" ? ' <span class="text-wlBlue" title="Clear filter">×</span>' : ''}
+            </th>
+            <th class="cursor-pointer bg-wlDark" data-filterkey="rank">
+                Rank${currentFilterKey === "rank" ? ' <span class="text-wlBlue" title="Clear filter">×</span>' : ''}
+            </th>
+            <th class="cursor-pointer bg-wlDark" data-filterkey="base">
+                Base${currentFilterKey === "base" ? ' <span class="text-wlBlue" title="Clear filter">×</span>' : ''}
+            </th>
+        </tr>
+    `;
+
+    // Table rows: each recipe (for this item, always 1 usually)
+    let rows = recipes.map(recipe => {
+        const recItem = itemLookup[recipe.outputId];
+        return `
+            <tr>
+                <td>
+                    <div class="flex items-center space-x-2">
+                        <img src="${recItem?.image}" alt="${recItem?.name}" class="w-8 h-8 object-cover rounded border border-wlLight border-opacity-20">
+                        <span>${recItem?.name}</span>
+                    </div>
+                </td>
+                <td>
+                    <span class="rarity-${recItem?.rarity}">${capitalizeFirstLetter(recItem?.rarity)}</span>
+                </td>
+                <td>
+                    <span>${recItem?.base || 'N/A'}</span>
+                </td>
+            </tr>
+        `;
+    }).join('');
+
+    // Filter bar above table, showing chips/buttons for filtering by value
+    let filterbar = `
+        <div class="flex flex-wrap gap-2 mb-2 text-xs">
+            <span>Filter: </span>
+            <span>
+                ${uniqueItems.map(name => filterButtonHtml("item", name, recipeFilter)).join('')}
+            </span>
+            <span>
+                ${uniqueRanks.map(rank => filterButtonHtml("rank", rank, recipeFilter)).join('')}
+            </span>
+            <span>
+                ${uniqueBases.map(base => filterButtonHtml("base", base, recipeFilter)).join('')}
+            </span>
+            ${recipeFilter ? `<button type="button" class="ml-2 text-wlRed underline" id="clearRecipeFilter">Clear Filter</button>` : ""}
+        </div>
+    `;
+
+    return `
+        <div class="mt-6">
+            <h4 class="text-lg font-semibold mb-2">Item / Rank / Base</h4>
+            ${filterbar}
+            <div class="table-container">
+                <table class="table w-full text-sm">
+                    <thead>${tableHead}</thead>
+                    <tbody>
+                        ${rows}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    `;
+}
+
+
+// ----- Now modify the openItemModal function -----
+let currentModalRecipeFilter = null;
+
+// Patch openItemModal to handle in-modal recipe filtering
+function openItemModal(itemId) {
+    const item = window.currentState.items.find(i => i.id === itemId);
+    if (!item) return;
+
+    const modal = document.getElementById('itemModal');
+    const modalContent = document.getElementById('modalContent');
+
+    // Reset filter when opening
+    currentModalRecipeFilter = null;
+
+    // Render modal markup (using new recipe table)
+    function renderModalDetail() {
+        modalContent.innerHTML = `
+            <div class="flex flex-col md:flex-row">
+                <div class="md:w-1/3 mb-6 md:mb-0 md:pr-6">
+                    <img src="${item.image}" alt="${item.name}" class="w-full rounded-lg object-cover">
+                    <div class="mt-4 grid grid-cols-2 gap-4">
+                        <div class="bg-wlDark p-3 rounded-lg">
+                            <div class="text-sm text-wlLight text-opacity-70">Level</div>
+                            <div class="text-lg font-medium">${item.level}</div>
+                        </div>
+                        <div class="bg-wlDark p-3 rounded-lg">
+                            <div class="text-sm text-wlLight text-opacity-70">Value</div>
+                            <div class="text-lg font-medium">${item.value ? item.value.toLocaleString() + ' G' : 'N/A'}</div>
+                        </div>
+                        <div class="bg-wlDark p-3 rounded-lg">
+                            <div class="text-sm text-wlLight text-opacity-70">Rarity</div>
+                            <div class="text-lg font-medium rarity-${item.rarity}">${capitalizeFirstLetter(item.rarity)}</div>
+                        </div>
+                        <div class="bg-wlDark p-3 rounded-lg">
+                            <div class="text-sm text-wlLight text-opacity-70">Type</div>
+                            <div class="text-lg font-medium">${capitalizeFirstLetter(item.type)}</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="md:w-2/3">
+                    <h3 class="text-2xl font-bold mb-2">${item.name}</h3>
+                    <div class="text-wlBlue mb-4">${item.subtype || ''}</div>
+                    <div class="mb-6">
+                        <h4 class="text-lg font-semibold mb-2">Description</h4>
+                        <p class="text-wlLight text-opacity-90">${item.description || 'No description available.'}</p>
+                    </div>
+                    <div class="mb-6">
+                        <h4 class="text-lg font-semibold mb-2">Base Materials</h4>
+                        <p class="text-wlLight text-opacity-90">${item.base || 'N/A'}</p>
+                    </div>
+                    <div class="mb-6">
+                        <h4 class="text-lg font-semibold mb-2">Source</h4>
+                        <p class="text-wlLight text-opacity-90">${item.source || 'Unknown'}</p>
+                    </div>
+                    ${Object.keys(item.stats || {}).length > 0 ? `
+                    <div>
+                        <h4 class="text-lg font-semibold mb-2">Stats</h4>
+                        <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
+                            ${Object.entries(item.stats).map(([stat, value]) => `
+                                <div class="bg-wlDark p-3 rounded-lg">
+                                    <div class="text-sm text-wlLight text-opacity-70">${capitalizeFirstLetter(stat)}</div>
+                                    <div class="text-lg font-medium">${typeof value === 'number' && value < 1 ? (value * 100).toFixed(0) + '%' : value}</div>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                    ` : ''}
+                    <!-- MODAL RECIPE SECTION -->
+                    <div id="modalRecipeBlock">${generateRecipeTable(item, currentModalRecipeFilter)}</div>
+                </div>
+            </div>
+        `;
+        attachRecipeFilterListeners(item);
+    }
+
+    // Add listeners after HTML rendered
+    function attachRecipeFilterListeners(item) {
+        // Clicking filter buttons (filter by value)
+        Array.from(document.querySelectorAll('#modalRecipeBlock button[data-filter-key]')).forEach(btn => {
+            btn.addEventListener('click', function() {
+                const k = btn.getAttribute('data-filter-key');
+                const v = decodeURIComponent(btn.getAttribute('data-filter-value'));
+                currentModalRecipeFilter = { key: k, value: v };
+                renderModalDetail();
+            });
+        });
+        // Clicking column headers to filter by column (show unique in this column for this modal)
+        Array.from(document.querySelectorAll('#modalRecipeBlock th[data-filterkey]')).forEach(th => {
+            th.addEventListener('click', function() {
+                const filterkey = th.getAttribute('data-filterkey');
+                // If already filtered by this, reset filter
+                if (currentModalRecipeFilter && currentModalRecipeFilter.key === filterkey) {
+                    currentModalRecipeFilter = null;
+                } else {
+                    // Set filter to first value for demo
+                    // (In practice, you'd show a dropdown or chips, but for simplicity pick the value shown in the first row)
+                    const itemList = window.currentState?.items || [];
+                    const itemLookup = Object.fromEntries(itemList.map(i => [i.id, i]));
+                    const allRecipes = [
+                        { outputId: 1, name: "Slayer's Forge", ingredients: [11, 19, 2] },
+                        { outputId: 2, name: "Phoenix Blend", ingredients: [7, 14] },
+                        { outputId: 5, name: "Shadow Craft", ingredients: [7, 11, 3, 12] },
+                        { outputId: 4, name: "Potion Making", ingredients: [7, 2, 11, 18, 3] },
+                        { outputId: 16, name: "Basic Cobbler", ingredients: [11, 17] },
+                        { outputId: 20, name: "Immortal Blend", ingredients: [2, 14, 19, 7, 11] }
+                    ];
+                    // Default to only those shown in modal:
+                    const recipes = allRecipes.filter(r => r.outputId === item.id);
+                    if (!recipes.length) return;
+                    const recItem = itemLookup[recipes[0].outputId];
+                    if (!recItem) return;
+                    let val = "";
+                    if (filterkey === "item") val = recItem.name;
+                    if (filterkey === "rank") val = recItem.rarity;
+                    if (filterkey === "base") val = recItem.base;
+                    currentModalRecipeFilter = { key: filterkey, value: val };
+                }
+                renderModalDetail();
+            });
+        });
+        // Clear filter button
+        const clearBtn = document.getElementById('clearRecipeFilter');
+        if (clearBtn) {
+            clearBtn.addEventListener('click', function() {
+                currentModalRecipeFilter = null;
+                renderModalDetail();
+            });
+        }
+    }
+
+    renderModalDetail();
+    modal.classList.remove('hidden');
+}
+
+window.openItemModal = openItemModal;
+        
+        function closeItemModal() {
+            document.getElementById('itemModal').classList.add('hidden');
+        }
+        
+        // Make functions global
+        window.openItemModal = openItemModal;
+        
+        // Close modal when clicking X or outside
+        document.getElementById('closeModal').addEventListener('click', closeItemModal);
+        document.getElementById('itemModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeItemModal();
+            }
+        });
+        
+        // Apply filters
+        document.getElementById('applyFilters').addEventListener('click', function() {
+            currentState.filters = {
+                search: document.getElementById('itemSearch').value.toLowerCase(),
+                type: document.getElementById('itemTypeFilter').value,
+                rarity: document.getElementById('rarityFilter').value,
+                minLevel: parseInt(document.getElementById('minLevel').value) || 0,
+                maxLevel: parseInt(document.getElementById('maxLevel').value) || 100
+            };
+            
+            currentState.currentPage = 1; // Reset to first page when filters change
+            renderItems();
+            filtersDropdown.classList.remove('open');
+        });
+        
+        // Reset filters
+        document.getElementById('resetFilters').addEventListener('click', function() {
+            document.getElementById('itemSearch').value = '';
+            document.getElementById('itemTypeFilter').value = '';
+            document.getElementById('rarityFilter').value = '';
+            document.getElementById('minLevel').value = '';
+            document.getElementById('maxLevel').value = '';
+            
+            currentState.filters = {
+                search: '',
+                type: '',
+                rarity: '',
+                minLevel: 0,
+                maxLevel: 100
+            };
+            
+            currentState.currentPage = 1;
+            renderItems();
+            filtersDropdown.classList.remove('open');
+        });
+        
+        // Search when pressing enter
+        document.getElementById('itemSearch').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                document.getElementById('applyFilters').click();
+            }
+        });
+        
+        // Change items per page
+        document.getElementById('itemsPerPage').addEventListener('change', function() {
+            currentState.itemsPerPage = parseInt(this.value);
+            currentState.currentPage = 1;
+            renderItems();
+        });
+        
+        document.getElementById('itemsPerPageGrid').addEventListener('change', function() {
+            currentState.itemsPerPage = parseInt(this.value);
+            currentState.currentPage = 1;
+            renderItems();
+        });
+        
+        // Table sorting
+        document.querySelectorAll('.table th[data-sort]').forEach(th => {
+            th.addEventListener('click', () => {
+                const column = th.getAttribute('data-sort');
+                
+                // Remove sort indicators from all headers
+                document.querySelectorAll('.table th').forEach(h => {
+                    h.classList.remove('sorted-asc', 'sorted-desc');
+                });
+                
+                // Determine new sort direction
+                if (currentState.sortColumn === column) {
+                    currentState.sortDirection = currentState.sortDirection === 'asc' ? 'desc' : 'asc';
+                } else {
+                    currentState.sortColumn = column;
+                    currentState.sortDirection = 'asc';
+                }
+                
+                // Add sort indicator to clicked header
+                th.classList.add(`sorted-${currentState.sortDirection}`);
+                
+                // Re-render items
+                renderItems();
+            });
+        });
+        
+        // Initial data load (simulating database fetch)
+        function loadInitialData() {
+            // In a real application, this would be an AJAX call to your backend
+            // which would query the MySQL database and return the results
+            
+            // Simulated database response
+            const simulatedResponse = [
+                {
+                    id: 1,
+                    name: "Dragon Slayer",
+                    type: "weapon",
+                    subtype: "Greatsword",
+                    rarity: "legendary",
+                    level: 60,
+                    value: 12500,
+                    base: "Dragon Bone / Mithril",
+                    source: "Ancient Hydra Drop",
+                    description: "A massive sword imbued with the power to slay dragons. Grants +15% damage against dragon-type enemies.",
+                    stats: {
+                        attack: 245,
+                        strength: 30,
+                        critical: 0.12
+                    },
+                    image: "https://via.placeholder.com/150/ef4444/ffffff?text=Dragon+Slayer"
+                },
+                {
+                    id: 2,
+                    name: "Phoenix Feather",
+                    type: "material",
+                    rarity: "epic",
+                    level: 45,
+                    value: 3200,
+                    base: "Phoenix Feather",
+                    source: "Phoenix Nest",
+                    description: "A rare feather from the legendary Phoenix. Used in high-level crafting recipes.",
+                    stats: {},
+                    image: "https://via.placeholder.com/150/8b5cf6/ffffff?text=Phoenix+Feather"
+                },
+                {
+                    id: 3,
+                    name: "Elven Chainmail",
+                    type: "armor",
+                    subtype: "Chest",
+                    rarity: "rare",
+                    level: 35,
+                    value: 7800,
+                    base: "Mithril / Elven Silk",
+                    source: "Elven Smith",
+                    description: "Lightweight yet incredibly strong chainmail crafted by elven smiths.",
+                    stats: {
+                        defense: 120,
+                        agility: 15,
+                        magicResist: 25
+                    },
+                    image: "https://via.placeholder.com/150/3b82f6/ffffff?text=Elven+Chainmail"
+                },
+                {
+                    id: 4,
+                    name: "Health Potion",
+                    type: "consumable",
+                    subtype: "Potion",
+                    rarity: "common",
+                    level: 1,
+                    value: 50,
+                    base: "Herbs / Water",
+                    source: "Alchemy Shop",
+                    description: "Restores 250 HP when consumed. 30 second cooldown.",
+                    stats: {
+                        heal: 250
+                    },
+                    image: "https://via.placeholder.com/150/10b981/ffffff?text=Health+Potion"
+                },
+                {
+                    id: 5,
+                    name: "Shadow Dagger",
+                    type: "weapon",
+                    subtype: "Dagger",
+                    rarity: "epic",
+                    level: 50,
+                    value: 9800,
+                    base: "Obsidian / Shadow Silk",
+                    source: "Assassin's Guild",
+                    description: "A dagger that moves through shadows. Chance to deal critical damage increased by 25%.",
+                    stats: {
+                        attack: 180,
+                        agility: 40,
+                        critical: 0.25
+                    },
+                    image: "https://via.placeholder.com/150/8b5cf6/ffffff?text=Shadow+Dagger"
+                },
+                {
+                    id: 6,
+                    name: "Titan's Shield",
+                    type: "armor",
+                    subtype: "Shield",
+                    rarity: "legendary",
+                    level: 55,
+                    value: 15000,
+                    base: "Titanium / Adamantine",
+                    source: "Titan's Remains",
+                    description: "A massive shield said to have been wielded by the Titans themselves. Provides immense protection.",
+                    stats: {
+                        defense: 280,
+                        vitality: 35,
+                        blockChance: 0.30
+                    },
+                    image: "https://via.placeholder.com/150/f59e0b/ffffff?text=Titan%27s+Shield"
+                },
+                {
+                    id: 7,
+                    name: "Mana Crystal",
+                    type: "material",
+                    rarity: "uncommon",
+                    level: 20,
+                    value: 450,
+                    base: "Crystal / Mana Essence",
+                    source: "Magic Shops",
+                    description: "A crystal infused with magical energy. Used in various magical recipes.",
+                    stats: {},
+                    image: "https://via.placeholder.com/150/10b981/ffffff?text=Mana+Crystal"
+                },
+                {
+                    id: 8,
+                    name: "Ancient Scroll",
+                    type: "quest",
+                    rarity: "rare",
+                    level: 40,
+                    value: 0,
+                    base: "Parchment / Ancient Ink",
+                    source: "Library Quest",
+                    description: "An ancient scroll containing forgotten knowledge. Required for the 'Secrets of the Ancients' quest.",
+                    stats: {},
+                    image: "https://via.placeholder.com/150/3b82f6/ffffff?text=Ancient+Scroll"
+                },
+                {
+                    id: 9,
+                    name: "Stamina Potion",
+                    type: "consumable",
+                    subtype: "Potion",
+                    rarity: "common",
+                    level: 10,
+                    value: 75,
+                    base: "Herbs / Water",
+                    source: "Alchemy Shop",
+                    description: "Restores 100 stamina when consumed. 45 second cooldown.",
+                    stats: {
+                        stamina: 100
+                    },
+                    image: "https://via.placeholder.com/150/10b981/ffffff?text=Stamina+Potion"
+                },
+                {
+                    id: 10,
+                    name: "Frost Bow",
+                    type: "weapon",
+                    subtype: "Bow",
+                    rarity: "epic",
+                    level: 48,
+                    value: 11000,
+                    base: "Ice Shard / Yew Wood",
+                    source: "Frost Giant Drop",
+                    description: "A bow that fires arrows imbued with frost. Has a chance to freeze enemies.",
+                    stats: {
+                        attack: 210,
+                        dexterity: 30,
+                        freezeChance: 0.15
+                    },
+                    image: "https://via.placeholder.com/150/8b5cf6/ffffff?text=Frost+Bow"
+                },
+                {
+                    id: 11,
+                    name: "Mithril Ore",
+                    type: "material",
+                    rarity: "rare",
+                    level: 30,
+                    value: 1200,
+                    base: "Mithril Ore",
+                    source: "Mithril Mines",
+                    description: "A rare metal ore used by master smiths to create powerful equipment.",
+                    stats: {},
+                    image: "https://via.placeholder.com/150/3b82f6/ffffff?text=Mithril+Ore"
+                },
+                {
+                    id: 12,
+                    name: "Paladin's Helm",
+                    type: "armor",
+                    subtype: "Helmet",
+                    rarity: "epic",
+                    level: 52,
+                    value: 9500,
+                    base: "Mithril / Holy Water",
+                    source: "Temple of Light",
+                    description: "A holy helmet worn by paladins of the Light. Increases healing received by 20%.",
+                    stats: {
+                        defense: 150,
+                        vitality: 25,
+                        healingReceived: 0.20
+                    },
+                    image: "https://via.placeholder.com/150/8b5cf6/ffffff?text=Paladin%27s+Helm"
+                },
+                {
+                    id: 13,
+                    name: "Invisibility Potion",
+                    type: "consumable",
+                    subtype: "Potion",
+                    rarity: "rare",
+                    level: 35,
+                    value: 1500,
+                    base: "Shadow Herb / Crystal Water",
+                    source: "Rogue's Guild",
+                    description: "Grants invisibility for 30 seconds. Attacking breaks the effect.",
+                    stats: {
+                        duration: 30
+                    },
+                    image: "https://via.placeholder.com/150/3b82f6/ffffff?text=Invisibility+Potion"
+                },
+                {
+                    id: 14,
+                    name: "Demon's Heart",
+                    type: "quest",
+                    rarity: "epic",
+                    level: 45,
+                    value: 0,
+                    base: "Demon Heart",
+                    source: "Demon Lord",
+                    description: "The still-beating heart of a powerful demon. Required for the 'Demon's Bane' quest.",
+                    stats: {},
+                    image: "https://via.placeholder.com/150/8b5cf6/ffffff?text=Demon%27s+Heart"
+                },
+                {
+                    id: 15,
+                    name: "Wizard's Staff",
+                    type: "weapon",
+                    subtype: "Staff",
+                    rarity: "epic",
+                    level: 50,
+                    value: 12500,
+                    base: "Oak Wood / Arcane Crystal",
+                    source: "Arcane Tower",
+                    description: "A staff imbued with arcane power. Increases spell damage by 25%.",
+                    stats: {
+                        magicAttack: 220,
+                        intelligence: 45,
+                        spellDamage: 0.25
+                    },
+                    image: "https://via.placeholder.com/150/8b5cf6/ffffff?text=Wizard%27s+Staff"
+                },
+                {
+                    id: 16,
+                    name: "Leather Boots",
+                    type: "armor",
+                    subtype: "Boots",
+                    rarity: "common",
+                    level: 5,
+                    value: 120,
+                    base: "Leather / Thread",
+                    source: "General Store",
+                    description: "Basic leather boots providing minimal protection.",
+                    stats: {
+                        defense: 15,
+                        agility: 2
+                    },
+                    image: "https://via.placeholder.com/150/ffffff/1e293b?text=Leather+Boots"
+                },
+                {
+                    id: 17,
+                    name: "Iron Sword",
+                    type: "weapon",
+                    subtype: "Sword",
+                    rarity: "common",
+                    level: 10,
+                    value: 350,
+                    base: "Iron / Wood",
+                    source: "Blacksmith",
+                    description: "A standard iron sword. Better than wood, but not by much.",
+                    stats: {
+                        attack: 65,
+                        strength: 5
+                    },
+                    image: "https://via.placeholder.com/150/ffffff/1e293b?text=Iron+Sword"
+                },
+                {
+                    id: 18,
+                    name: "Golden Key",
+                    type: "quest",
+                    rarity: "uncommon",
+                    level: 20,
+                    value: 0,
+                    base: "Gold / Enchanted Metal",
+                    source: "Mayor's Quest",
+                    description: "A golden key that opens the treasure vault beneath the town.",
+                    stats: {},
+                    image: "https://via.placeholder.com/150/10b981/ffffff?text=Golden+Key"
+                },
+                {
+                    id: 19,
+                    name: "Dragon Scale",
+                    type: "material",
+                    rarity: "epic",
+                    level: 55,
+                    value: 8500,
+                    base: "Dragon Scale",
+                    source: "Dragon Lair",
+                    description: "An incredibly durable scale from an ancient dragon. Used in legendary armor crafting.",
+                    stats: {},
+                    image: "https://via.placeholder.com/150/8b5cf6/ffffff?text=Dragon+Scale"
+                },
+                {
+                    id: 20,
+                    name: "Elixir of Life",
+                    type: "consumable",
+                    subtype: "Elixir",
+                    rarity: "legendary",
+                    level: 60,
+                    value: 25000,
+                    base: "Phoenix Feather / Unicorn Horn",
+                    source: "Alchemy Master",
+                    description: "A legendary elixir that fully restores HP and MP and grants temporary invulnerability.",
+                    stats: {
+                        heal: "100%",
+                        manaRestore: "100%",
+                        invulnerability: 5
+                    },
+                    image: "https://via.placeholder.com/150/f59e0b/ffffff?text=Elixir+of+Life"
+                }
+            ];
+            
+            // Set the items in state
+            currentState.items = simulatedResponse;
+            
+            // Initial render
+            renderItems();
+        }
+        
+        // Initialize the application
+        loadInitialData();
+    </script>
+</body>
+</html>

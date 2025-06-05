@@ -1,0 +1,565 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Monsters - Wonderland Online DB</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        wlBlue: '#3b82f6',
+                        wlPurple: '#8b5cf6',
+                        wlGreen: '#10b981',
+                        wlRed: '#ef4444',
+                        wlYellow: '#f59e0b',
+                        wlDark: '#1e293b',
+                        wlDarker: '#0f172a',
+                        wlLight: '#f1f5f9', // Using the softer off-white (slate-100 equivalent)
+                    },
+                    animation: {
+                        'float': 'float 6s ease-in-out infinite',
+                        'float-fast': 'float 4s ease-in-out infinite',
+                        'pulse-slow': 'pulse 8s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                        'modal-scale-in': 'modalScaleIn 0.3s ease-out forwards',
+                        'modal-fade-in': 'modalFadeIn 0.3s ease-out forwards',
+                    },
+                    keyframes: {
+                        float: {
+                            '0%, 100%': { transform: 'translateY(0)' },
+                            '50%': { transform: 'translateY(-10px)' },
+                        },
+                        modalScaleIn: {
+                            '0%': { opacity: 0, transform: 'scale(0.95) translateY(10px)' },
+                            '100%': { opacity: 1, transform: 'scale(1) translateY(0)' },
+                        },
+                        modalFadeIn: {
+                            '0%': { opacity: 0 },
+                            '100%': { opacity: 1 },
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+        
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: #0f172a;
+            background-image: 
+                radial-gradient(at 20% 30%, rgba(59, 130, 246, 0.15) 0px, transparent 50%),
+                radial-gradient(at 80% 0%, rgba(139, 92, 246, 0.15) 0px, transparent 50%),
+                radial-gradient(at 0% 50%, rgba(239, 68, 68, 0.1) 0px, transparent 50%),
+                url('https://images.unsplash.com/photo-1605106702734-205df224ecce?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1470&q=80');
+            background-size: cover;
+            background-attachment: fixed;
+            background-position: center;
+            background-blend-mode: overlay;
+            min-height: 100vh;
+        }
+        
+        .card-hover {
+            transition: all 0.3s ease;
+            transform-style: preserve-3d;
+        }
+        
+        .card-hover:hover {
+            transform: translateY(-5px) scale(1.02) rotateX(1deg);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.2), 0 10px 10px -5px rgba(0, 0, 0, 0.1);
+        }
+        
+        .search-input:focus {
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.5); 
+        }
+        
+        .nav-link { position: relative; }
+        .nav-link::after {
+            content: ''; position: absolute; width: 0; height: 2px;
+            bottom: 0; left: 0; background-color: currentColor;
+            transition: width 0.3s ease;
+        }
+        .nav-link:hover::after { width: 100%; }
+        
+        .glow { text-shadow: 0 0 10px rgba(139, 92, 246, 0.7); }
+        .gradient-text { background-clip: text; -webkit-background-clip: text; color: transparent; }
+        .blur-bg { backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); }
+        
+        .tooltip { position: relative; }
+        .tooltip:hover .tooltip-text { visibility: visible; opacity: 1; transform: translateY(0); }
+        .tooltip-text {
+            visibility: hidden; opacity: 0; position: absolute; z-index: 10;
+            bottom: 125%; left: 50%; transform: translateX(-50%) translateY(10px);
+            background-color: #1e293b; color: white; text-align: center;
+            padding: 5px 10px; border-radius: 6px; transition: all 0.3s ease;
+            width: max-content; max-width: 200px; font-size: 0.8rem;
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -1px rgba(0,0,0,0.06);
+        }
+        .tooltip-text::after {
+            content: ""; position: absolute; top: 100%; left: 50%; margin-left: -5px;
+            border-width: 5px; border-style: solid; border-color: #1e293b transparent transparent transparent;
+        }
+        
+        .fade-in { animation: fadeIn 0.5s ease-in forwards; }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .sidebar { transition: transform 0.3s ease; }
+        .sidebar-hidden { transform: translateX(100%); }
+        .sidebar-visible { transform: translateX(0); }
+        
+        .dark-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background-color: rgba(0,0,0,0.5); z-index: 40; opacity: 0;
+            pointer-events: none; transition: opacity 0.3s ease;
+        }
+        .dark-overlay-visible { opacity: 1; pointer-events: auto; }
+
+        .no-results { 
+            text-align: center; 
+            padding: 20px; 
+            /* color: #wlLight; <-- This was incorrect. Color is inherited from body.text-wlLight */
+            opacity: 0.7; 
+        }
+        .filter-select {
+            background-color: #1e293b; border: 1px solid rgba(241, 245, 249, 0.2); /* Updated to match new wlLight */
+            /* color will be inherited or use text-wlLight class */
+            padding: 0.5rem 1rem; border-radius: 0.375rem;
+            font-size: 0.875rem; transition: border-color 0.3s ease;
+        }
+        .filter-select:hover { border-color: #ef4444; }
+        .filter-select:focus {
+            outline: none; border-color: #ef4444;
+            box-shadow: 0 0 0 2px rgba(239,68,68,0.3);
+        }
+
+        /* Modal Styles */
+        .modal-overlay {
+            position: fixed; inset: 0;
+            background-color: rgba(15, 23, 42, 0.8); 
+            backdrop-filter: blur(4px);
+            z-index: 50; display: flex; align-items: center; justify-content: center;
+            padding: 1rem; animation: modalFadeIn 0.3s ease-out forwards;
+        }
+        .modal-content {
+            background-color: #1e293b; 
+            padding: 1.5rem; 
+            border-radius: 0.75rem; 
+            border: 1px solid rgba(241, 245, 249, 0.2); /* Updated to match current wlLight (#f1f5f9 -> rgb(241,245,249)) */
+            box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5);
+            width: 100%; max-width: 600px; max-height: 90vh;
+            overflow-y: auto; position: relative;
+            animation: modalScaleIn 0.3s ease-out forwards;
+        }
+        .modal-close-button {
+            position: absolute; top: 0.75rem; right: 0.75rem;
+            color: #9ca3af; 
+            transition: color 0.2s ease;
+        }
+        .modal-close-button:hover {
+            color: #f1f5f9; /* Uses the hex of wlLight directly here, which is fine */
+        }
+        .modal-hidden { display: none; }
+    </style>
+</head>
+<body class="text-wlLight"> 
+    <div id="darkOverlay" class="dark-overlay"></div>
+    <div id="mobileSidebar" class="sidebar sidebar-hidden fixed inset-y-0 right-0 w-64 bg-wlDarker z-50 shadow-2xl p-4 overflow-y-auto">
+        <div class="flex justify-between items-center mb-8">
+            <div class="w-10 h-10 rounded-full bg-gradient-to-br from-wlPurple to-wlBlue flex items-center justify-center">
+                <i class="fas fa-dragon text-xl text-white"></i>
+            </div>
+            <button id="closeSidebar" class="hover:text-wlRed">
+                <i class="fas fa-times text-xl"></i>
+            </button>
+        </div>
+        <nav class="space-y-4">
+            <a href="Dog.html" class="block px-4 py-2 rounded-md font-medium hover:bg-wlDark hover:bg-opacity-50 transition">Home</a>
+            <a href="#" class="block px-4 py-2 rounded-md font-medium hover:bg-wlDark hover:bg-opacity-50 transition">Items</a>
+            <a href="#" class="block px-4 py-2 rounded-md font-medium hover:bg-wlDark hover:bg-opacity-50 transition">Quests</a>
+            <a href="monsters.html" class="block px-4 py-2 rounded-md font-medium bg-wlDark bg-opacity-50 transition">Monsters</a>
+            <a href="#" class="block px-4 py-2 rounded-md font-medium hover:bg-wlDark hover:bg-opacity-50 transition">Guides</a>
+            <a href="#" class="block px-4 py-2 rounded-md font-medium hover:bg-wlDark hover:bg-opacity-50 transition">Collections</a>
+            <a href="#" class="block px-4 py-2 rounded-md font-medium hover:bg-wlDark hover:bg-opacity-50 transition">Shops</a>
+            <a href="#" class="block px-4 py-2 rounded-md font-medium hover:bg-wlDark hover:bg-opacity-50 transition">Recycles</a>
+        </nav>
+        <div class="mt-8 pt-4 border-t border-wlLight border-opacity-20">
+            <h4 class="font-medium mb-4">Quick Links</h4>
+            <div class="space-y-2">
+                <a href="#" class="block text-sm text-opacity-70 hover:text-wlBlue transition">Updates</a>
+                <a href="#" class="block text-sm text-opacity-70 hover:text-wlBlue transition">Patch Notes</a>
+                <a href="#" class="block text-sm text-opacity-70 hover:text-wlBlue transition">Community</a>
+                <a href="#" class="block text-sm text-opacity-70 hover:text-wlBlue transition">API</a>
+            </div>
+        </div>
+    </div>
+
+    <div class="min-h-screen flex flex-col">
+        <header class="bg-wlDark bg-opacity-90 blur-bg shadow-lg sticky top-0 z-30">
+            <div class="container mx-auto px-4 py-4">
+                <div class="flex justify-between items-center">
+                    <div class="flex items-center space-x-4">
+                        <a href="Dog.html" class="flex items-center space-x-4">
+                            <div class="w-10 h-10 rounded-full bg-gradient-to-br from-wlPurple to-wlBlue flex items-center justify-center">
+                                <i class="fas fa-dragon text-xl text-white"></i>
+                            </div>
+                            <h1 class="text-2xl font-bold bg-gradient-to-r from-wlBlue to-wlPurple gradient-text glow">
+                                Wonderland Online DB
+                            </h1>
+                        </a>
+                    </div>
+                    <div class="hidden md:flex space-x-6 items-center">
+                        <a href="Dog.html" class="nav-link px-3 py-2 text-sm font-medium">Home</a>
+                        <a href="#" class="nav-link px-3 py-2 text-sm font-medium">Updates</a>
+                        <a href="#" class="nav-link px-3 py-2 text-sm font-medium">About</a>
+                        <a href="#" class="nav-link px-3 py-2 text-sm font-medium">Contact</a>
+                        <button class="ml-4 px-4 py-2 bg-gradient-to-r from-wlBlue to-wlPurple text-white rounded-md hover:opacity-90 transition">
+                            Login
+                        </button>
+                    </div>
+                    <div class="md:hidden">
+                        <button id="openSidebar" class="focus:outline-none">
+                            <i class="fas fa-bars text-2xl"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <main class="flex-grow container mx-auto px-4 py-8">
+            <section class="text-center mb-12">
+                <div class="max-w-4xl mx-auto relative">
+                    <div class="absolute -top-20 -left-20 w-40 h-40 bg-wlRed rounded-full filter blur-3xl opacity-20 animate-pulse-slow"></div>
+                    <div class="absolute -bottom-20 -right-20 w-40 h-40 bg-wlPurple rounded-full filter blur-3xl opacity-20 animate-pulse-slow"></div>
+                    <h2 class="text-4xl md:text-5xl font-bold mb-4 bg-gradient-to-r from-wlRed to-wlPurple gradient-text glow">
+                        Explore the Bestiary
+                    </h2>
+                    <p class="text-lg md:text-xl max-w-3xl mx-auto mb-8"> 
+                        Browse and search for monsters across Wonderland. Discover their stats, drops, and locations.
+                    </p>
+                    <div class="max-w-2xl mx-auto relative">
+                        <input type="text" id="monsterSearchInput" placeholder="Search by name, element, location..." 
+                               class="search-input w-full px-6 py-4 rounded-full bg-wlDark border-wlLight border-opacity-30 focus:border-wlRed transition duration-300">
+                        <button class="absolute right-3 top-3 bg-gradient-to-r from-wlRed to-wlPurple text-white p-2 rounded-full hover:opacity-90 transition tooltip">
+                            <i class="fas fa-search"></i>
+                            <span class="tooltip-text">Press Enter or type to search</span>
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+            <section class="mb-12">
+                <div class="flex flex-col md:flex-row justify-between items-center mb-6 gap-4 md:gap-6">
+                    <h3 class="text-2xl font-semibold whitespace-nowrap">All Monsters (<span id="monsterCount">0</span>)</h3>
+                    <div class="flex flex-wrap justify-center md:justify-end gap-2 md:gap-4 w-full">
+                        <select id="filterElement" class="filter-select text-wlLight">
+                            <option value="" class="bg-wlDarker">All Elements</option>
+                        </select>
+                        <select id="filterType" class="filter-select text-wlLight">
+                            <option value="" class="bg-wlDarker">All Types</option>
+                        </select>
+                        <div class="relative">
+                            <button id="sortMonstersButton" class="flex items-center space-x-2 text-sm hover:text-wlRed transition px-4 py-2 bg-wlDark bg-opacity-50 rounded-md border border-wlLight border-opacity-20 h-full">
+                                <span id="sortButtonText">Sort by: Name (A-Z)</span>
+                                <i class="fas fa-chevron-down text-xs"></i>
+                            </button>
+                            <div id="sortMonstersDropdown" class="hidden absolute right-0 mt-2 w-48 bg-wlDark rounded-md shadow-lg z-20 py-1 border border-wlLight border-opacity-20">
+                                <a href="#" class="block px-4 py-2 text-sm hover:bg-wlDarker" data-sort="name_asc">Name (A-Z)</a>
+                                <a href="#" class="block px-4 py-2 text-sm hover:bg-wlDarker" data-sort="name_desc">Name (Z-A)</a>
+                                <a href="#" class="block px-4 py-2 text-sm hover:bg-wlDarker" data-sort="level_asc">Level (Low-High)</a>
+                                <a href="#" class="block px-4 py-2 text-sm hover:bg-wlDarker" data-sort="level_desc">Level (High-Low)</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div id="monsterGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
+                <div id="noResultsMessage" class="hidden no-results"> {/* text-wlLight class added for explicitness */}
+                    <i class="fas fa-dragon text-4xl mb-4 text-wlPurple"></i>
+                    <p class="text-xl">No monsters found matching your criteria.</p>
+                    <p>Try adjusting your search or filter options.</p>
+                </div>
+            </section>
+        </main>
+
+        <footer class="bg-wlDark bg-opacity-90 blur-bg py-12">
+            <div class="container mx-auto px-4">
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
+                    <div>
+                        <div class="flex items-center space-x-3 mb-4">
+                            <div class="w-10 h-10 rounded-full bg-gradient-to-br from-wlPurple to-wlBlue flex items-center justify-center">
+                                <i class="fas fa-dragon text-xl text-white"></i></div>
+                            <h3 class="text-lg font-semibold">Wonderland Online DB</h3>
+                        </div>
+                        <p class="text-sm text-opacity-70">Your ultimate resource for Wonderland Online game data.</p>
+                    </div>
+                    <div>
+                        <h4 class="text-md font-semibold mb-4">Quick Nav</h4>
+                        <ul class="space-y-2 text-sm">
+                            <li><a href="Dog.html" class="text-opacity-70 hover:text-wlBlue transition">Home</a></li>
+                            <li><a href="#" class="text-opacity-70 hover:text-wlBlue transition">Items</a></li>
+                            <li><a href="monsters.html" class="text-opacity-70 hover:text-wlBlue transition">Monsters</a></li>
+                            <li><a href="#" class="text-opacity-70 hover:text-wlBlue transition">Quests</a></li>
+                        </ul>
+                    </div>
+                    <div>
+                        <h4 class="text-md font-semibold mb-4">Community</h4>
+                        <ul class="space-y-2 text-sm">
+                            <li><a href="#" class="text-opacity-70 hover:text-wlBlue transition">Forums</a></li>
+                            <li><a href="#" class="text-opacity-70 hover:text-wlBlue transition">Discord</a></li>
+                            <li><a href="#" class="text-opacity-70 hover:text-wlBlue transition">Contribute</a></li>
+                        </ul>
+                    </div>
+                    <div>
+                        <h4 class="text-md font-semibold mb-4">Legal</h4>
+                        <ul class="space-y-2 text-sm">
+                            <li><a href="#" class="text-opacity-70 hover:text-wlBlue transition">Privacy Policy</a></li>
+                            <li><a href="#" class="text-opacity-70 hover:text-wlBlue transition">Terms of Service</a></li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="border-t border-wlLight border-opacity-20 pt-8 text-center text-sm text-opacity-50">
+                    &copy; 2024 Wonderland Online DB. All rights reserved. Game content and materials are trademarks and copyrights of their respective publisher and its licensors.
+                </div>
+            </div>
+        </footer>
+    </div>
+
+    <div id="monsterModal" class="modal-overlay modal-hidden">
+        <div class="modal-content">
+            <button id="modalCloseButton" class="modal-close-button text-2xl">
+                <i class="fas fa-times"></i>
+            </button>
+            <div class="flex flex-col sm:flex-row items-center sm:items-start gap-6 mb-6">
+                <div id="modalMonsterIcon" class="w-24 h-24 sm:w-32 sm:h-32 rounded-lg bg-wlDarker flex items-center justify-center text-wlRed text-5xl flex-shrink-0"></div>
+                <div class="text-center sm:text-left">
+                    <h2 id="modalMonsterName" class="text-3xl font-bold mb-1"></h2>
+                    <p id="modalMonsterSubtitle" class="text-sm text-opacity-70"></p>
+                </div>
+            </div>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-4 mb-6 text-sm">
+                <div><strong class="font-medium text-opacity-70">HP:</strong> <span id="modalMonsterHp"></span></div>
+                <div><strong class="font-medium text-opacity-70">Element:</strong> <span id="modalMonsterElement"></span></div>
+                <div><strong class="font-medium text-opacity-70">Attack:</strong> <span id="modalMonsterAtk"></span></div>
+                <div><strong class="font-medium text-opacity-70">Defense:</strong> <span id="modalMonsterDef"></span></div>
+                <div class="sm:col-span-2"><strong class="font-medium text-opacity-70">Location:</strong> <span id="modalMonsterLocation"></span></div>
+            </div>
+            <div>
+                <h4 class="text-lg font-semibold mb-2">Notable Drops</h4>
+                <ul id="modalMonsterDrops" class="list-disc list-inside text-sm text-opacity-80 space-y-1"></ul>
+                <p id="modalNoDrops" class="text-sm text-opacity-60 hidden">No notable drops listed.</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const allMonsters = [
+            { id: 1, name: 'Ancient Specter', level: 75, type: 'Undead', hp: 3500, atk: 280, def: 150, element: 'Dark', location: 'Cursed Mausoleum', iconClass: 'fa-ghost', drops: ['Ectoplasm', 'Soul Shard', 'Ancient Relic'] },
+            { id: 2, name: 'Young Wyvern', level: 42, type: 'Dragon', hp: 1800, atk: 180, def: 90, element: 'Wind', location: 'Sky Peak Foothills', iconClass: 'fa-dragon', drops: ['Wyvern Scale', 'Wind Crystal', 'Sharp Talon'] },
+            { id: 3, name: 'Forest Creeper', level: 28, type: 'Insect', hp: 950, atk: 90, def: 50, element: 'Earth', location: 'Whispering Woods', iconClass: 'fa-spider', drops: ['Spider Silk', 'Forest Venom', 'Sturdy Carapace'] },
+            { id: 4, name: 'Rock Golem', level: 60, type: 'Elemental', hp: 5200, atk: 200, def: 300, element: 'Earth', location: 'Ancient Quarry', iconClass: 'fa-mountain', drops: ['Golem Core', 'Earth Crystal', 'Solid Stone'] },
+            { id: 5, name: 'Sea Serpent', level: 55, type: 'Aquatic', hp: 4100, atk: 220, def: 180, element: 'Water', location: 'Sunken Ruins', iconClass: 'fa-water', drops: ['Serpent Scale', 'Water Orb', 'Coral Fragment'] },
+            { id: 6, name: 'Shadow Stalker', level: 68, type: 'Demon', hp: 4500, atk: 350, def: 120, element: 'Dark', location: 'Forgotten Crypt', iconClass: 'fa-user-secret', drops: ['Shadow Essence', 'Dark Crystal', 'Cursed Ring'] },
+            { id: 7, name: 'Wind Sprite', level: 35, type: 'Fey', hp: 1200, atk: 110, def: 70, element: 'Wind', location: 'Gusty Plains', iconClass: 'fa-feather-alt', drops: [] }
+        ];
+        
+        let currentSort = { column: 'name', order: 'asc' };
+        let currentFilters = { element: '', type: '' };
+
+        const monsterGrid = document.getElementById('monsterGrid');
+        const monsterCountSpan = document.getElementById('monsterCount');
+        const searchInput = document.getElementById('monsterSearchInput');
+        const sortButton = document.getElementById('sortMonstersButton');
+        const sortButtonText = document.getElementById('sortButtonText');
+        const sortDropdown = document.getElementById('sortMonstersDropdown');
+        const filterElementSelect = document.getElementById('filterElement');
+        const filterTypeSelect = document.getElementById('filterType');
+        const noResultsMessage = document.getElementById('noResultsMessage');
+        const monsterModal = document.getElementById('monsterModal');
+        const modalCloseButton = document.getElementById('modalCloseButton');
+        const modalMonsterIcon = document.getElementById('modalMonsterIcon');
+        const modalMonsterName = document.getElementById('modalMonsterName');
+        const modalMonsterSubtitle = document.getElementById('modalMonsterSubtitle');
+        const modalMonsterHp = document.getElementById('modalMonsterHp');
+        const modalMonsterElement = document.getElementById('modalMonsterElement');
+        const modalMonsterAtk = document.getElementById('modalMonsterAtk');
+        const modalMonsterDef = document.getElementById('modalMonsterDef');
+        const modalMonsterLocation = document.getElementById('modalMonsterLocation');
+        const modalMonsterDrops = document.getElementById('modalMonsterDrops');
+        const modalNoDrops = document.getElementById('modalNoDrops');
+
+        function getUniqueValues(data, key) {
+            const unique = new Set(data.map(item => item[key]));
+            return Array.from(unique).sort();
+        }
+
+        function populateFilterDropdown(selectElement, values) {
+            if (!selectElement) return;
+            values.forEach(value => {
+                const option = document.createElement('option');
+                option.value = value;
+                option.textContent = value;
+                option.classList.add('bg-wlDarker');
+                selectElement.appendChild(option);
+            });
+        }
+        
+        function renderMonsterCard(monster) {
+            return `
+                <div class="bg-wlDark bg-opacity-70 rounded-xl p-6 border border-wlLight border-opacity-20 hover:border-wlRed transition duration-300 card-hover group fade-in">
+                    <div class="flex items-start mb-4">
+                        <div class="w-16 h-16 rounded-md bg-wlDarker flex items-center justify-center mr-4 group-hover:animate-pulse-slow flex-shrink-0">
+                            <i class="fas ${monster.iconClass || 'fa-question-circle'} text-3xl text-wlRed"></i> 
+                        </div>
+                        <div class="flex-grow min-w-0">
+                            <h4 class="text-xl font-medium mb-1 truncate" title="${monster.name}">${monster.name}</h4>
+                            <p class="text-xs text-opacity-70 truncate">Level: ${monster.level} | Type: ${monster.type}</p>
+                        </div>
+                    </div>
+                    <div class="mb-3 space-y-1 text-sm">
+                        <p><strong class="font-medium text-opacity-70">HP:</strong> ${monster.hp.toLocaleString()}</p>
+                        <p><strong class="font-medium text-opacity-70">Element:</strong> ${monster.element}</p>
+                    </div>
+                    <div class="mt-4 flex justify-end">
+                        <a href="#" data-monster-id="${monster.id}" class="view-details-link text-wlRed text-sm font-medium hover:underline flex items-center">
+                            View Details <i class="fas fa-chevron-right ml-1 text-xs"></i>
+                        </a>
+                    </div>
+                </div>`;
+        }
+
+        function displayMonsters(monstersToDisplay) {
+            if (!monsterGrid || !monsterCountSpan || !noResultsMessage) return;
+            monsterGrid.innerHTML = ''; 
+            noResultsMessage.classList.toggle('hidden', monstersToDisplay.length > 0);
+            monsterGrid.classList.toggle('hidden', monstersToDisplay.length === 0);
+            
+            monstersToDisplay.forEach((monster, index) => {
+                const cardHtml = renderMonsterCard(monster);
+                const tempDiv = document.createElement('div');
+                tempDiv.innerHTML = cardHtml.trim();
+                const cardElement = tempDiv.firstChild;
+                if (cardElement) {
+                   cardElement.style.animationDelay = `${index * 0.05}s`;
+                   monsterGrid.appendChild(cardElement);
+                }
+            });
+            monsterCountSpan.textContent = monstersToDisplay.length;
+        }
+        
+        function applyFiltersSortAndSearch() {
+            let processedMonsters = [...allMonsters];
+            if (currentFilters.element) {
+                processedMonsters = processedMonsters.filter(m => m.element === currentFilters.element);
+            }
+            if (currentFilters.type) {
+                processedMonsters = processedMonsters.filter(m => m.type === currentFilters.type);
+            }
+            const searchTerm = searchInput ? searchInput.value.toLowerCase() : "";
+            if (searchTerm) {
+                processedMonsters = processedMonsters.filter(monster => 
+                    Object.values(monster).some(val => String(val).toLowerCase().includes(searchTerm)) || 
+                    monster.drops.some(drop => drop.toLowerCase().includes(searchTerm))
+                );
+            }
+            processedMonsters.sort((a, b) => {
+                let valA = a[currentSort.column]; let valB = b[currentSort.column];
+                if (typeof valA === 'string') { valA = valA.toLowerCase(); valB = valB.toLowerCase(); }
+                if (valA < valB) return currentSort.order === 'asc' ? -1 : 1;
+                if (valA > valB) return currentSort.order === 'asc' ? 1 : -1;
+                return 0;
+            });
+            displayMonsters(processedMonsters);
+        }
+
+        function openMonsterModal(monsterId) {
+            const monster = allMonsters.find(m => m.id === parseInt(monsterId));
+            if (!monster || !monsterModal) return;
+
+            modalMonsterIcon.innerHTML = `<i class="fas ${monster.iconClass || 'fa-question-circle'}"></i>`;
+            modalMonsterName.textContent = monster.name;
+            modalMonsterSubtitle.textContent = `Level: ${monster.level} | Type: ${monster.type}`;
+            modalMonsterHp.textContent = monster.hp.toLocaleString();
+            modalMonsterElement.textContent = monster.element;
+            modalMonsterAtk.textContent = monster.atk !== undefined ? monster.atk.toLocaleString() : 'N/A';
+            modalMonsterDef.textContent = monster.def !== undefined ? monster.def.toLocaleString() : 'N/A';
+            modalMonsterLocation.textContent = monster.location;
+
+            modalMonsterDrops.innerHTML = '';
+            modalNoDrops.classList.toggle('hidden', monster.drops && monster.drops.length > 0);
+            modalMonsterDrops.classList.toggle('hidden', !(monster.drops && monster.drops.length > 0));
+            if (monster.drops && monster.drops.length > 0) {
+                monster.drops.forEach(drop => {
+                    const li = document.createElement('li'); li.textContent = drop;
+                    modalMonsterDrops.appendChild(li);
+                });
+            }
+            monsterModal.classList.remove('modal-hidden');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeMonsterModal() {
+            if (!monsterModal) return;
+            monsterModal.classList.add('modal-hidden');
+            document.body.style.overflow = '';
+        }
+
+        const openSidebarButton = document.getElementById('openSidebar');
+        const closeSidebarButton = document.getElementById('closeSidebar');
+        const mobileSidebar = document.getElementById('mobileSidebar');
+        const pageDarkOverlay = document.getElementById('darkOverlay');
+
+        function toggleSidebar(visible) {
+            if (!mobileSidebar || !pageDarkOverlay) return;
+            mobileSidebar.classList.toggle('sidebar-hidden', !visible);
+            mobileSidebar.classList.toggle('sidebar-visible', visible);
+            pageDarkOverlay.classList.toggle('dark-overlay-visible', visible);
+        }
+
+        if (openSidebarButton) openSidebarButton.addEventListener('click', () => toggleSidebar(true));
+        if (closeSidebarButton) closeSidebarButton.addEventListener('click', () => toggleSidebar(false));
+        if (pageDarkOverlay) pageDarkOverlay.addEventListener('click', () => toggleSidebar(false));
+        
+        if (sortButton && sortDropdown && sortButtonText) {
+            sortButton.addEventListener('click', (event) => { event.stopPropagation(); sortDropdown.classList.toggle('hidden'); });
+            document.addEventListener('click', (event) => {
+                if (!sortButton.contains(event.target) && !sortDropdown.contains(event.target)) { sortDropdown.classList.add('hidden'); }
+            });
+            sortDropdown.querySelectorAll('a').forEach(link => {
+                link.addEventListener('click', function(e) {
+                    e.preventDefault(); const [column, order] = this.dataset.sort.split('_');
+                    currentSort = { column, order }; sortButtonText.textContent = `Sort by: ${this.textContent}`;
+                    sortDropdown.classList.add('hidden'); applyFiltersSortAndSearch();
+                });
+            });
+        }
+        
+        if (searchInput) searchInput.addEventListener('keyup', applyFiltersSortAndSearch);
+        if (filterElementSelect) filterElementSelect.addEventListener('change', (e) => { currentFilters.element = e.target.value; applyFiltersSortAndSearch(); });
+        if (filterTypeSelect) filterTypeSelect.addEventListener('change', (e) => { currentFilters.type = e.target.value; applyFiltersSortAndSearch(); });
+
+        if (monsterGrid) {
+            monsterGrid.addEventListener('click', (event) => {
+                const link = event.target.closest('.view-details-link');
+                if (link && link.dataset.monsterId) { event.preventDefault(); openMonsterModal(link.dataset.monsterId); }
+            });
+        }
+        if (modalCloseButton) modalCloseButton.addEventListener('click', closeMonsterModal);
+        if (monsterModal) monsterModal.addEventListener('click', (event) => { if (event.target === monsterModal) { closeMonsterModal(); } });
+        document.addEventListener('keydown', (event) => { if (event.key === 'Escape' && !monsterModal.classList.contains('modal-hidden')) { closeMonsterModal(); } });
+
+        populateFilterDropdown(filterElementSelect, getUniqueValues(allMonsters, 'element'));
+        populateFilterDropdown(filterTypeSelect, getUniqueValues(allMonsters, 'type'));
+        applyFiltersSortAndSearch();
+    });
+    </script>
+</body>
+</html>

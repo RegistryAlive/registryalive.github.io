@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tier List - Wonderland Online DB</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        wlBlue: '#3b82f6',
+                        wlPurple: '#8b5cf6',
+                        wlGreen: '#10b981',
+                        wlRed: '#ef4444',
+                        wlYellow: '#f59e0b',
+                        wlDark: '#1e293b',
+                        wlDarker: '#0f172a',
+                        wlLight: '#f1f5f9',
+                    },
+                }
+            }
+        }
+    </script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: #0f172a;
+            background-image: 
+                radial-gradient(at 20% 30%, rgba(59, 130, 246, 0.15) 0px, transparent 50%),
+                radial-gradient(at 80% 0%, rgba(139, 92, 246, 0.15) 0px, transparent 50%),
+                radial-gradient(at 0% 50%, rgba(239, 68, 68, 0.1) 0px, transparent 50%),
+                url('https://images.unsplash.com/photo-1605106702734-205df224ecce?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1470&q=80');
+            background-size: cover;
+            background-attachment: fixed;
+            background-position: center;
+            background-blend-mode: overlay;
+            min-height: 100vh;
+        }
+        .card-hover {
+            transition: all 0.3s ease;
+            transform-style: preserve-3d;
+        }
+        .card-hover:hover {
+            transform: translateY(-5px) scale(1.02) rotateX(1deg);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.2), 0 10px 10px -5px rgba(0, 0, 0, 0.1);
+        }
+        .glow { text-shadow: 0 0 10px rgba(139, 92, 246, 0.7); }
+        .gradient-text { background-clip: text; -webkit-background-clip: text; color: transparent; }
+        .blur-bg { backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); }
+        .tier-label {
+            font-size: 2.2rem;
+            font-weight: bold;
+            letter-spacing: 0.1em;
+            padding: 0.5rem 2.2rem;
+            border-radius: 9999px;
+            margin-bottom: 2.2rem;
+            display: inline-block;
+            box-shadow: 0 4px 24px 0 rgba(59,130,246,0.10), 0 1.5px 0 0 #fff2;
+            border: 2.5px solid #fff3;
+        }
+        .tier-S { background: linear-gradient(90deg, #f59e0b, #ef4444, #8b5cf6); color: #fff; border-color: #f59e0b; }
+        .tier-A { background: linear-gradient(90deg, #3b82f6, #8b5cf6); color: #fff; border-color: #3b82f6; }
+        .tier-B { background: linear-gradient(90deg, #10b981, #3b82f6); color: #fff; border-color: #10b981; }
+        .tier-C { background: linear-gradient(90deg, #f1f5f9, #1e293b); color: #1e293b; border-color: #f1f5f9; }
+        .filter-btn {
+            padding: 0.5rem 1.25rem;
+            border-radius: 9999px;
+            font-weight: 700;
+            font-size: 1rem;
+            border: none;
+            background: linear-gradient(90deg, rgba(30,41,59,0.85) 60%, rgba(59,130,246,0.12) 100%);
+            color: #f1f5f9;
+            margin-right: 0.75rem;
+            margin-bottom: 0.75rem;
+            box-shadow: 0 2px 8px 0 rgba(59,130,246,0.08);
+            transition: background 0.18s, color 0.18s, transform 0.15s, box-shadow 0.18s;
+            cursor: pointer;
+            outline: none;
+            border: 1.5px solid transparent;
+        }
+        .filter-btn:hover {
+            background: linear-gradient(90deg, #3b82f6 60%, #8b5cf6 100%);
+            color: #fff;
+            transform: scale(1.07);
+            box-shadow: 0 4px 16px 0 rgba(59,130,246,0.18);
+            border-color: #8b5cf6;
+        }
+        .filter-btn.active {
+            background: linear-gradient(90deg, #8b5cf6 60%, #3b82f6 100%);
+            color: #fff;
+            transform: scale(1.09);
+            box-shadow: 0 6px 24px 0 rgba(139,92,246,0.22);
+            border-color: #f59e0b;
+        }
+        .mini-detail {
+            display: none;
+            position: absolute;
+            left: 50%;
+            top: 0;
+            transform: translate(-50%, -110%);
+            min-width: 260px;
+            z-index: 100;
+            background: #232946;
+            border: 2.5px solid #8b5cf6;
+            border-radius: 1rem;
+            box-shadow: 0 12px 32px 0 rgba(59,130,246,0.22), 0 2px 8px 0 rgba(0,0,0,0.18);
+            padding: 1.1rem 1.2rem 1.2rem 1.2rem;
+            color: #f1f5f9;
+            font-size: 1rem;
+            pointer-events: none;
+        }
+        .mini-detail::before {
+            content: '';
+            position: absolute;
+            left: 50%;
+            top: 100%;
+            transform: translateX(-50%);
+            border-width: 10px 10px 0 10px;
+            border-style: solid;
+            border-color: #8b5cf6 transparent transparent transparent;
+            filter: drop-shadow(0 2px 4px #232946cc);
+        }
+        .card-hover:hover .mini-detail {
+            display: block;
+            pointer-events: auto;
+        }
+        .mini-detail .font-bold {
+            font-size: 1.15rem;
+            letter-spacing: 0.01em;
+        }
+        .mini-detail span {
+            margin-bottom: 0.2rem;
+        }
+        .mini-detail strong {
+            color: #f59e0b;
+            font-weight: 700;
+        }
+        .mini-detail .mb-1 {
+            margin-bottom: 0.4rem;
+        }
+    </style>
+</head>
+<body class="text-wlLight">
+    <div class="min-h-screen flex flex-col">
+        <!-- Header (copied from monsters.html) -->
+        <header class="bg-wlDark bg-opacity-90 blur-bg shadow-lg sticky top-0 z-30">
+            <div class="container mx-auto px-4 py-4">
+                <div class="flex justify-between items-center">
+                    <div class="flex items-center space-x-4">
+                        <a href="Dog.html" class="flex items-center space-x-4">
+                            <div class="w-10 h-10 rounded-full bg-gradient-to-br from-wlPurple to-wlBlue flex items-center justify-center">
+                                <i class="fas fa-dragon text-xl text-white"></i>
+                            </div>
+                            <h1 class="text-2xl font-bold bg-gradient-to-r from-wlBlue to-wlPurple gradient-text glow">
+                                Wonderland Online DB
+                            </h1>
+                        </a>
+                    </div>
+                    <div class="hidden md:flex space-x-6 items-center">
+                        <a href="Dog.html" class="nav-link px-3 py-2 text-sm font-medium">Home</a>
+                        <a href="#" class="nav-link px-3 py-2 text-sm font-medium">Updates</a>
+                        <a href="#" class="nav-link px-3 py-2 text-sm font-medium">About</a>
+                        <a href="#" class="nav-link px-3 py-2 text-sm font-medium">Contact</a>
+                        <button class="ml-4 px-4 py-2 bg-gradient-to-r from-wlBlue to-wlPurple text-white rounded-md hover:opacity-90 transition">
+                            Login
+                        </button>
+                    </div>
+                    <div class="md:hidden">
+                        <button id="openSidebar" class="focus:outline-none">
+                            <i class="fas fa-bars text-2xl"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </header>
+        <main class="flex-grow container mx-auto px-4 py-8">
+            <section class="text-center mb-12">
+                <div class="max-w-4xl mx-auto relative">
+                    <h2 class="text-4xl md:text-5xl font-bold mb-4 bg-gradient-to-r from-wlRed to-wlPurple gradient-text glow">
+                        Character Tier List
+                    </h2>
+                    <p class="text-lg md:text-xl max-w-3xl mx-auto mb-8">
+                        Discover the best characters in Wonderland Online, ranked by their overall strength, utility, and popularity. Each card shows the character, their elements, and key info.
+                    </p>
+                    <div class="max-w-3xl mx-auto mb-8">
+                        <input id="searchInput" type="text" placeholder="Search by name, element, or role..." class="w-full px-6 py-3 rounded-full bg-wlDark border border-wlLight border-opacity-30 focus:border-wlRed transition duration-300 text-wlLight shadow-md mb-6">
+                        <div class="bg-wlDark bg-opacity-70 rounded-2xl p-4 shadow-lg flex flex-col gap-6">
+                            <div>
+                                <div class="text-left text-wlLight text-sm font-semibold mb-2 pl-1 tracking-wide opacity-80">Element Filter</div>
+                                <div id="elementFilters" class="flex flex-wrap gap-2 justify-center md:justify-start"></div>
+                            </div>
+                            <div>
+                                <div class="text-left text-wlLight text-sm font-semibold mb-2 pl-1 tracking-wide opacity-80">Role Filter</div>
+                                <div id="roleFilters" class="flex flex-wrap gap-2 justify-center md:justify-start"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            <section class="mb-12" id="tierListSection">
+                <!-- Tier lists will be rendered here by JS -->
+            </section>
+        </main>
+        <!-- Footer (copied from monsters.html) -->
+        <footer class="bg-wlDark bg-opacity-90 blur-bg py-12">
+            <div class="container mx-auto px-4">
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
+                    <div>
+                        <div class="flex items-center space-x-3 mb-4">
+                            <div class="w-10 h-10 rounded-full bg-gradient-to-br from-wlPurple to-wlBlue flex items-center justify-center">
+                                <i class="fas fa-dragon text-xl text-white"></i></div>
+                            <h3 class="text-lg font-semibold">Wonderland Online DB</h3>
+                        </div>
+                        <p class="text-sm text-opacity-70">Your ultimate resource for Wonderland Online game data.</p>
+                    </div>
+                    <div>
+                        <h4 class="text-md font-semibold mb-4">Quick Nav</h4>
+                        <ul class="space-y-2 text-sm">
+                            <li><a href="Dog.html" class="text-opacity-70 hover:text-wlBlue transition">Home</a></li>
+                            <li><a href="#" class="text-opacity-70 hover:text-wlBlue transition">Items</a></li>
+                            <li><a href="monsters.html" class="text-opacity-70 hover:text-wlBlue transition">Monsters</a></li>
+                            <li><a href="#" class="text-opacity-70 hover:text-wlBlue transition">Quests</a></li>
+                        </ul>
+                    </div>
+                    <div>
+                        <h4 class="text-md font-semibold mb-4">Community</h4>
+                        <ul class="space-y-2 text-sm">
+                            <li><a href="#" class="text-opacity-70 hover:text-wlBlue transition">Forums</a></li>
+                            <li><a href="#" class="text-opacity-70 hover:text-wlBlue transition">Discord</a></li>
+                            <li><a href="#" class="text-opacity-70 hover:text-wlBlue transition">Contribute</a></li>
+                        </ul>
+                    </div>
+                    <div>
+                        <h4 class="text-md font-semibold mb-4">Legal</h4>
+                        <ul class="space-y-2 text-sm">
+                            <li><a href="#" class="text-opacity-70 hover:text-wlBlue transition">Privacy Policy</a></li>
+                            <li><a href="#" class="text-opacity-70 hover:text-wlBlue transition">Terms of Service</a></li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="border-t border-wlLight border-opacity-20 pt-8 text-center text-sm text-opacity-50">
+                    &copy; 2024 Wonderland Online DB. All rights reserved. Game content and materials are trademarks and copyrights of their respective publisher and its licensors.
+                </div>
+            </div>
+        </footer>
+    </div>
+    <script>
+    // Demo data for the tier list
+    const tierData = [
+        {
+            tier: 'S',
+            labelClass: 'tier-S',
+            borderClass: 'border-wlYellow',
+            characters: [
+                {
+                    name: 'Athena',
+                    icon: 'fa-crown',
+                    iconColor: 'text-wlYellow',
+                    elements: ['Water', 'Magic'],
+                    role: 'Support / Healer',
+                    special: 'Revive, Full Heal, Buffs',
+                    details: 'Athena is the best support in the game, able to revive and heal the entire party. Her buffs are top tier.'
+                },
+                {
+                    name: 'Freya',
+                    icon: 'fa-fire',
+                    iconColor: 'text-wlRed',
+                    elements: ['Fire', 'Physical'],
+                    role: 'DPS / Burst',
+                    special: 'High Crit, AoE Attacks',
+                    details: 'Freya excels at dealing massive burst damage with high crit rates and powerful AoE skills.'
+                }
+            ]
+        },
+        {
+            tier: 'A',
+            labelClass: 'tier-A',
+            borderClass: 'border-wlBlue',
+            characters: [
+                {
+                    name: 'Robin',
+                    icon: 'fa-leaf',
+                    iconColor: 'text-wlGreen',
+                    elements: ['Earth', 'Ranged'],
+                    role: 'Ranged DPS',
+                    special: 'Multi-hit, Debuffs',
+                    details: 'Robin is a reliable ranged attacker with multi-hit skills and useful debuffs.'
+                },
+                {
+                    name: 'Zephyr',
+                    icon: 'fa-wind',
+                    iconColor: 'text-wlBlue',
+                    elements: ['Wind', 'Magic'],
+                    role: 'Speed / Utility',
+                    special: 'Fast Buffs, Turn Manipulation',
+                    details: 'Zephyr brings speed and utility, manipulating turn order and providing quick buffs.'
+                }
+            ]
+        },
+        {
+            tier: 'B',
+            labelClass: 'tier-B',
+            borderClass: 'border-wlGreen',
+            characters: [
+                {
+                    name: 'Marina',
+                    icon: 'fa-water',
+                    iconColor: 'text-wlBlue',
+                    elements: ['Water', 'Support'],
+                    role: 'Support',
+                    special: 'Cleanse, Minor Heal',
+                    details: 'Marina can cleanse debuffs and provide minor healing, making her a solid support pick.'
+                },
+                {
+                    name: 'Bolt',
+                    icon: 'fa-bolt',
+                    iconColor: 'text-wlYellow',
+                    elements: ['Lightning', 'Magic'],
+                    role: 'Magic DPS',
+                    special: 'Stun, Chain Attacks',
+                    details: 'Bolt is a magic DPS with chain attacks and a chance to stun enemies.'
+                }
+            ]
+        },
+        {
+            tier: 'C',
+            labelClass: 'tier-C',
+            borderClass: 'border-wlLight',
+            characters: [
+                {
+                    name: 'Generic NPC',
+                    icon: 'fa-user',
+                    iconColor: 'text-wlLight',
+                    elements: ['Neutral'],
+                    role: 'Filler',
+                    special: 'None',
+                    details: 'A generic NPC with no special abilities. Used as a filler character.'
+                }
+            ]
+        }
+    ];
+
+    // Utility to get unique elements and roles
+    function getUnique(arr, key) {
+        const set = new Set();
+        arr.forEach(tier => tier.characters.forEach(c => {
+            if (Array.isArray(c[key])) c[key].forEach(v => set.add(v));
+            else set.add(c[key]);
+        }));
+        return Array.from(set);
+    }
+
+    // Render filter buttons
+    function renderFilters() {
+        const elementFilters = document.getElementById('elementFilters');
+        const roleFilters = document.getElementById('roleFilters');
+        const elements = getUnique(tierData, 'elements');
+        const roles = getUnique(tierData, 'role');
+        elementFilters.innerHTML = '<button class="filter-btn" data-element="">All Elements</button>' +
+            elements.map(e => `<button class="filter-btn" data-element="${e}">${e}</button>`).join('');
+        roleFilters.innerHTML = '<button class="filter-btn" data-role="">All Roles</button>' +
+            roles.map(r => `<button class="filter-btn" data-role="${r}">${r}</button>`).join('');
+    }
+
+    // Render the tier list
+    function renderTierList(search = '', element = '', role = '') {
+        const section = document.getElementById('tierListSection');
+        let html = '';
+        tierData.forEach(tier => {
+            // Filter characters by search, element, and role
+            const filtered = tier.characters.filter(c => {
+                const matchesSearch = search === '' ||
+                    c.name.toLowerCase().includes(search) ||
+                    c.elements.some(el => el.toLowerCase().includes(search)) ||
+                    c.role.toLowerCase().includes(search) ||
+                    c.special.toLowerCase().includes(search);
+                const matchesElement = !element || c.elements.includes(element);
+                const matchesRole = !role || c.role === role;
+                return matchesSearch && matchesElement && matchesRole;
+            });
+            if (filtered.length === 0) return;
+            html += `<div class="mb-14">
+                <span class="tier-label ${tier.labelClass}">${tier.tier} Tier</span>
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">`;
+            filtered.forEach(c => {
+                html += `<div class="relative bg-wlDark bg-opacity-90 rounded-2xl p-7 border ${tier.borderClass} border-opacity-80 card-hover group shadow-xl mb-4">
+                    <div class="flex items-center mb-5">
+                        <div class="w-16 h-16 rounded-lg bg-wlDarker flex items-center justify-center mr-5 shadow-md">
+                            <i class="fas ${c.icon} text-3xl ${c.iconColor}"></i>
+                        </div>
+                        <div>
+                            <h4 class="text-2xl font-bold mb-1 tracking-wide">${c.name}</h4>
+                            <div class="flex flex-wrap gap-2">${c.elements.map(el => `<span class="px-3 py-1 rounded-lg bg-wlBlue text-xs font-semibold shadow">${el}</span>`).join('')}</div>
+                        </div>
+                    </div>
+                    <div class="mb-3 text-base">
+                        <p><strong>Role:</strong> ${c.role}</p>
+                        <p><strong>Special:</strong> ${c.special}</p>
+                    </div>
+                    <div class="mini-detail">
+                        <div class="font-bold mb-1">${c.name}</div>
+                        <div class="mb-1">${c.elements.map(el => `<span class='inline-block px-2 py-1 rounded bg-wlBlue text-xs font-semibold mr-1 mb-1'>${el}</span>`).join('')}</div>
+                        <div class="mb-1"><strong>Role:</strong> ${c.role}</div>
+                        <div class="mb-1"><strong>Special:</strong> ${c.special}</div>
+                        <div class="mb-1"><strong>Details:</strong> ${c.details}</div>
+                    </div>
+                </div>`;
+            });
+            html += '</div></div>';
+        });
+        section.innerHTML = html || '<div class="flex flex-col items-center justify-center py-16"><i class="fas fa-search text-5xl text-wlBlue mb-4"></i><div class="text-center text-2xl opacity-80 font-semibold mb-2">No characters found.</div><div class="text-center text-base opacity-60">Try adjusting your search or filter options.</div></div>';
+    }
+
+    // Event listeners for search and filters
+    document.addEventListener('DOMContentLoaded', function() {
+        renderFilters();
+        renderTierList();
+        let currentElement = '';
+        let currentRole = '';
+        let currentSearch = '';
+        const searchInput = document.getElementById('searchInput');
+        const elementFilters = document.getElementById('elementFilters');
+        const roleFilters = document.getElementById('roleFilters');
+        // Search
+        searchInput.addEventListener('input', function() {
+            currentSearch = this.value.trim().toLowerCase();
+            renderTierList(currentSearch, currentElement, currentRole);
+        });
+        // Element filter
+        elementFilters.addEventListener('click', function(e) {
+            if (e.target.matches('.filter-btn')) {
+                currentElement = e.target.dataset.element || '';
+                Array.from(elementFilters.children).forEach(btn => btn.classList.remove('active'));
+                e.target.classList.add('active');
+                renderTierList(currentSearch, currentElement, currentRole);
+            }
+        });
+        // Role filter
+        roleFilters.addEventListener('click', function(e) {
+            if (e.target.matches('.filter-btn')) {
+                currentRole = e.target.dataset.role || '';
+                Array.from(roleFilters.children).forEach(btn => btn.classList.remove('active'));
+                e.target.classList.add('active');
+                renderTierList(currentSearch, currentElement, currentRole);
+            }
+        });
+        // Set default active filter buttons
+        elementFilters.querySelector('.filter-btn[data-element=""]')?.classList.add('active');
+        roleFilters.querySelector('.filter-btn[data-role=""]')?.classList.add('active');
+    });
+    </script>
+</body>
+</html>
